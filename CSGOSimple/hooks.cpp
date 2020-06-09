@@ -198,11 +198,14 @@ namespace Hooks {
 	{
 		static auto panelId = vgui::VPANEL{ 0 };
 
+		if (g_LocalPlayer != g_LocalPlayer)
+			return;
 
 		if (g_Options.misc_removezoom)
 		{
 			if (!g_LocalPlayer->IsAlive())
 				return;
+
 			if (strstr(g_VGuiPanel->GetName(panel), "HudZoom")) {
 				if (g_EngineClient->IsConnected() && g_EngineClient->IsInGame())
 					return;
