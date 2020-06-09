@@ -198,8 +198,7 @@ namespace Hooks {
 	{
 		static auto panelId = vgui::VPANEL{ 0 };
 
-		if (g_LocalPlayer != g_LocalPlayer)
-			return;
+	
 
 		if (g_Options.misc_removezoom)
 		{
