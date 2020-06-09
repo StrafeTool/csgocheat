@@ -19,7 +19,7 @@
 
 extern ImFont* g_pDefaultFont;
 extern ImFont* g_pSecondFont;
-
+extern ImFont* g_namefont;
 
 class Vector;
 
@@ -110,6 +110,8 @@ public:
 	inline void RenderBox(T x1, T y1, T x2, T y2, Color color, float thickness = 1.f, float rounding = 0.f) {
 		draw_list->AddRect(ImVec2(x1, y1), ImVec2(x2, y2), GetU32(color), rounding, 15, thickness);
 	}
+
+
 	inline void RenderBox(RECT r, Color color,float thickness = 1.f, float rounding = 0.f) {
 		RenderBox(r.left, r.top, r.right, r.bottom, color, thickness, rounding);
 	}
@@ -121,6 +123,14 @@ public:
 	inline void RenderLine(T x1, T y1, T x2, T y2, Color color, float thickness = 1.f) {
 		draw_list->AddLine(ImVec2(x1, y1), ImVec2(x2, y2), GetU32(color), thickness);
 	}
+	void box(const float x1, const float y1, const float x2, const float y2, const Color clr, const float size) const
+	{
+		Render::Get().RenderLine(x1, y1, x2, y1, clr, size);
+		Render::Get().RenderLine(x1, y2, x2, y2, clr, size);
+		Render::Get().RenderLine(x1, y1, x1, y2, clr, size);
+		Render::Get().RenderLine(x2, y1, x2, y2, clr, size);
+	}
+
 	template <class T>
 	inline float RenderText(const std::string& text, T x, T y, float size, Color clr, bool center = false, bool outline = true, ImFont* pFont = g_pDefaultFont) {
 		return RenderText(text, ImVec2(x, y), size, clr, center, outline, pFont);

@@ -30,6 +30,7 @@ public:
 			Vector        head_pos;
 			Vector        feet_pos;
 			RECT          bbox;
+			float percent = 1.f;
 		} ctx;
 
 		bool Begin(C_BasePlayer * pl);

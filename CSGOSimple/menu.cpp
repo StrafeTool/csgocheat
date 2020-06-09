@@ -289,18 +289,24 @@ void RenderEmptyTab()
 	
     ImGui::Checkbox("Lagcomp", g_Options.misc_backtrack);
     if (g_Options.misc_backtrack)
-    {
-      ImGui::SliderInt("", g_Options.misc_backtrack_slider, 0, 12);
-    }
+    ImGui::SliderInt("", g_Options.misc_backtrack_slider, 0, 12);
+
     ImGui::Checkbox("Grenade Preview", g_Options.misc_grenadepreview);
     ImGui::Checkbox("Bunny Hop", g_Options.misc_bhop);
-    ImGui::Checkbox("Night Mode", g_Options.misc_nightmode);       
+    ImGui::Checkbox("Night Mode", g_Options.misc_nightmode); 
+
+    if (g_Options.misc_nightmode)
+     ImGui::SliderFloat(" ", g_Options.misc_nightmode_slider, 0, 1);
+       
     ImGui::Checkbox("Force Crosshair", g_Options.esp_crosshair);
+    ImGui::Checkbox("Boxes", g_Options.esp_player_boxes);
+    ImGui::Checkbox("Names", g_Options.esp_player_names);
     ImGui::Checkbox("Chams", g_Options.chams_player_enabled);
     ImGui::Checkbox("Ignore-Z", g_Options.chams_player_ignorez); 
     ImGui::SliderInt("viewmodel_fov:", g_Options.viewmodel_fov, 68, 120);
     ImGui::Checkbox("Third Person", g_Options.misc_thirdperson);
     ImGui::Checkbox("Remove zoom", g_Options.misc_removezoom);
+
 
 
 

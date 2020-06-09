@@ -1,7 +1,6 @@
 #include "singleton.hpp"
 #include "valve_sdk/csgostructs.hpp"
 #include "helpers/math.hpp"
-#include "Vector3D.hpp"
 #include "options.hpp"
 #include <deque>
 #include "valve_sdk/math/Vector.hpp"
@@ -14,7 +13,6 @@ struct StoredData
 	float simtime;
 	Vector hitboxPos;
 };
-
 class TimeWarp : public Singleton<TimeWarp>
 {
 	int nLatestTick;

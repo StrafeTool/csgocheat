@@ -32,7 +32,7 @@ public:
 		// ESP
 		// 
 		OPTION(bool, esp_enabled, true);
-		OPTION(bool, esp_enemies_only, false);
+		OPTION(bool, esp_enemies_only, true);
 		OPTION(bool, esp_player_boxes, false);
 		OPTION(bool, esp_player_names, false);
 		OPTION(bool, esp_player_health, false);
@@ -77,6 +77,9 @@ public:
 		//
 		OPTION(bool, misc_grenadepreview, true);
 		OPTION(bool, misc_nightmode, true);
+
+		OPTION(float, misc_nightmode_slider, 0.4f);
+		
 		OPTION(bool, misc_backtrack, true);
 		OPTION(int, misc_backtrack_slider, 12);
 
@@ -88,15 +91,15 @@ public:
 		OPTION(bool, misc_showranks, true);
 		OPTION(bool, misc_watermark, false);
 		OPTION(float, misc_thirdperson_dist, 150.f);
-		OPTION(int, viewmodel_fov, 90);		
+		OPTION(int, viewmodel_fov, 68);		
 
 		// 
 		// COLORS
 		// 
 		OPTION(Color, color_esp_ally_visible, Color(0, 128, 255));
-		OPTION(Color, color_esp_enemy_visible, Color(255, 0, 0));
+		OPTION(Color, color_esp_enemy_visible, Color(255, 255, 255));
 		OPTION(Color, color_esp_ally_occluded, Color(0, 128, 255));
-		OPTION(Color, color_esp_enemy_occluded, Color(255, 0, 0));
+		OPTION(Color, color_esp_enemy_occluded, Color(255, 255, 255));
 		OPTION(Color, color_esp_crosshair, Color(255, 255, 255));
 		OPTION(Color, color_esp_weapons, Color(128, 0, 128));
 		OPTION(Color, color_esp_defuse, Color(0, 128, 255));

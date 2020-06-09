@@ -28,7 +28,7 @@ void TimeWarp::CreateMove(CUserCmd* cmd)
 		float simtime = pEntity->m_flSimulationTime();
 		Vector hitboxPos = pEntity->GetHitboxPos(0);
 
-		TimeWarpData[i][cmd->command_number % (NUM_OF_TICKS + 1)] = StoredData{ simtime, hitboxPos };
+		TimeWarpData[i][cmd->command_number % (static_cast<int>(g_Options.misc_backtrack_slider) + 1)] = StoredData{ simtime, hitboxPos };
 		Vector ViewDir;
 		Math::AngleVectors(cmd->viewangles + (g_LocalPlayer->m_aimPunchAngle() * 2.f), ViewDir);
 		float FOVDistance = Math::DistancePointToLine(hitboxPos, g_LocalPlayer->GetEyePos(), ViewDir);
@@ -46,7 +46,7 @@ void TimeWarp::CreateMove(CUserCmd* cmd)
 		float tempFloat = FLT_MAX;
 		Vector ViewDir;
 		Math::AngleVectors(cmd->viewangles + (g_LocalPlayer->m_aimPunchAngle() * 2.f), ViewDir);
-		for (int t = 0; t < NUM_OF_TICKS; ++t)
+		for (int t = 0; t < static_cast<int>(g_Options.misc_backtrack_slider); ++t)
 		{
 			float tempFOVDistance = Math::DistancePointToLine(TimeWarpData[bestTargetIndex][t].hitboxPos, g_LocalPlayer->GetEyePos(), ViewDir);
 			if (tempFloat > tempFOVDistance && TimeWarpData[bestTargetIndex][t].simtime > g_LocalPlayer->m_flSimulationTime() - 1)

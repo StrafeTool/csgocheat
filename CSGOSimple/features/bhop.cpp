@@ -52,7 +52,11 @@ void BunnyHop::AutoStrafe(CUserCmd* cmd)
     {
         if (cmd->mousedx > 1 || cmd->mousedx < -1)
         {
+            if (cmd->buttons & IN_MOVELEFT || cmd->buttons & IN_MOVERIGHT || cmd->buttons & IN_BACK || cmd->buttons & IN_FORWARD)
+                return;
+
             cmd->sidemove = cmd->mousedx < 0.f ? -450.f : 450.f;
         }
     }
+   
 }

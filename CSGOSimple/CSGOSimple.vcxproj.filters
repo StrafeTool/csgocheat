@@ -397,8 +397,5 @@
     <ClInclude Include="backtrack.hpp">
       <Filter>Header Files\features</Filter>
     </ClInclude>
-    <ClInclude Include="Vector3D.hpp">
-      <Filter>Header Files\SDK</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>

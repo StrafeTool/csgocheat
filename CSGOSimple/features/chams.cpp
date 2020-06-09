@@ -10,6 +10,8 @@
 Chams::Chams() {
 	materialRegular = g_MatSystem->FindMaterial("debug/debugambientcube");
 	materialFlat = g_MatSystem->FindMaterial("debug/debugdrawflat");
+
+	//glowtest = g_MatSystem->FindMaterial("debug/debugdrawflat");
 }
 
 Chams::~Chams() {
@@ -77,20 +79,11 @@ void Chams::OnDrawModelExecute(
 			const auto clr_front = enemy ? g_Options.color_chams_player_enemy_visible : g_Options.color_chams_player_ally_visible;
 			const auto clr_back = enemy ? g_Options.color_chams_player_enemy_occluded : g_Options.color_chams_player_ally_occluded;
 
-			if (g_Options.chams_player_ignorez) {
-				OverrideMaterial(
-					true,
-					g_Options.chams_player_flat,
-					g_Options.chams_player_wireframe,
-					false,
-					clr_back);
+			if (g_Options.chams_player_ignorez)
+			{
+				OverrideMaterial(true, g_Options.chams_player_flat, g_Options.chams_player_wireframe,	false, clr_back);
 				fnDME(g_MdlRender, 0, ctx, state, info, matrix);
-				OverrideMaterial(
-					false,
-					g_Options.chams_player_flat,
-					g_Options.chams_player_wireframe,
-					false,
-					clr_front);
+				OverrideMaterial(false,g_Options.chams_player_flat, g_Options.chams_player_wireframe, false,clr_front);
 			}
 			else {
 				OverrideMaterial(

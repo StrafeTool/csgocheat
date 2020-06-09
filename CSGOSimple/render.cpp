@@ -12,6 +12,7 @@
 
 ImFont* g_pDefaultFont;
 ImFont* g_pSecondFont;
+ImFont* g_namefont;
 
 ImDrawListSharedData _data;
 
@@ -45,6 +46,12 @@ void Render::GetFonts() {
 		Fonts::Droid_compressed_data,
 		Fonts::Droid_compressed_size,
 		18.f);
+
+	//name font
+	g_namefont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(
+		Fonts::Droid_compressed_data,
+		Fonts::Droid_compressed_size,
+		13.f);
 	
 
 	// font for watermark; just example
@@ -66,7 +73,7 @@ void Render::BeginScene() {
 
 
 	if (g_Options.misc_watermark)
-		Render::Get().RenderText("CSGOSimple", 10, 5, 18.f, g_Options.color_watermark, false, true, g_pSecondFont);
+		Render::Get().RenderText("zinc legit", 10, 5, 18.f, g_Options.color_watermark, false, true, g_pSecondFont);
 
 	if (g_EngineClient->IsInGame() && g_LocalPlayer && g_Options.esp_enabled)
 	{

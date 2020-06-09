@@ -112,16 +112,35 @@ bool Visuals::Player::Begin(C_BasePlayer* pl)
 }
 //--------------------------------------------------------------------------------
 void Visuals::Player::RenderBox() {
-	Render::Get().RenderBoxByType(ctx.bbox.left, ctx.bbox.top, ctx.bbox.right, ctx.bbox.bottom, ctx.clr, 1);
+
+		//g_render.box(ctx.bbox.left - 1, ctx.bbox.top - 1, ctx.bbox.right + 1, ctx.bbox.bottom + 1,
+		//	Color(0, 0, 0, 25 + static_cast<int> (ctx.percent * 230)), 1.f);
+		//g_render.box(ctx.bbox.left + 1, ctx.bbox.top + 1, ctx.bbox.right - 1, ctx.bbox.bottom - 1,
+		//	Color(0, 0, 0, 25 + static_cast<int> (ctx.percent * 230)), 1.f);
+		//g_render.box(ctx.bbox.left, ctx.bbox.top, ctx.bbox.right, ctx.bbox.bottom, ctx.clr, 1.f);
+
+
+
+		Render::Get().RenderBox(ctx.bbox.left - 1, ctx.bbox.top - 1, ctx.bbox.right + 1, ctx.bbox.bottom + 1,
+			Color(0, 0, 0, 25 + static_cast<int> (ctx.percent * 230)), .5f);
+
+		Render::Get().RenderBox(ctx.bbox.left + 1, ctx.bbox.top + 1, ctx.bbox.right - 1, ctx.bbox.bottom - 1,
+			Color(0, 0, 0, 25 + static_cast<int> (ctx.percent * 230)), .5f);
+
+		Render::Get().RenderBox(ctx.bbox.left, ctx.bbox.top, ctx.bbox.right, ctx.bbox.bottom, ctx.clr, .5f);
+
+
+
+	//Render::Get().RenderBoxByType(ctx.bbox.left, ctx.bbox.top, ctx.bbox.right, ctx.bbox.bottom, ctx.clr, 1);
 }
 //--------------------------------------------------------------------------------
 void Visuals::Player::RenderName()
 {
 	player_info_t info = ctx.pl->GetPlayerInfo();
 
-	auto sz = g_pDefaultFont->CalcTextSizeA(14.f, FLT_MAX, 0.0f, info.szName);
+	auto sz = g_namefont->CalcTextSizeA(14.f, FLT_MAX, 0.0f, info.szName);
 
-	Render::Get().RenderText(info.szName, ctx.feet_pos.x - sz.x / 2, ctx.head_pos.y - sz.y, 14.f,  ctx.clr);
+	Render::Get().RenderText(info.szName, ctx.feet_pos.x - sz.x / 2, ctx.head_pos.y - sz.y, 12.f,  ctx.clr);
 }
 //--------------------------------------------------------------------------------
 void Visuals::Player::RenderHealth()
@@ -189,9 +208,9 @@ void Visuals::Player::RenderSnapline()
 void Visuals::RenderCrosshair()
 {
 	static auto crosshair = g_CVar->FindVar("weapon_debug_spread_show");
-	//if (g_LocalPlayer->m_bIsScoped())
-	//	crosshair->SetValue(0);
-	//else
+	if (g_LocalPlayer->m_bIsScoped())
+		crosshair->SetValue(0);
+	else
 		crosshair->SetValue(3);
 
 }
@@ -284,8 +303,8 @@ void Visuals::ScopeLine()
 	{
 		int w, h;
 		g_EngineClient->GetScreenSize(w, h);
-		Render::Get().RenderLine(w / 2, 0, w / 2, h, Color(15, 15, 15, 255), 1.f);
-		Render::Get().RenderLine(0, h / 2, w, h / 2, Color(15, 15, 15, 255), 1.f);
+		Render::Get().RenderLine(w / 2, 0, w / 2, h, Color(0, 0, 0, 255), 1.f);
+		Render::Get().RenderLine(0, h / 2, w, h / 2, Color(0, 0, 0, 255), 1.f);
 	}
 }
 //--------------------------------------------------------------------------------
@@ -328,7 +347,7 @@ void Visuals::NightMode()
 				}				
 				if (strstr(group, TEXTURE_GROUP_WORLD))
 				{
-					pMaterial->ColorModulate(0.275f, 0.275f, 0.275f);
+					pMaterial->ColorModulate(g_Options.misc_nightmode_slider, g_Options.misc_nightmode_slider, g_Options.misc_nightmode_slider);
 				}
 				if (strstr(group, "StaticProp"))
 				{

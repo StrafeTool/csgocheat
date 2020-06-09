@@ -29,4 +29,5 @@ private:
 
     IMaterial* materialRegular = nullptr;
     IMaterial* materialFlat = nullptr;
+    IMaterial* glowtest = nullptr;
 };
