@@ -7,43 +7,20 @@
 #include "valve_sdk/math/Vector.hpp"
 #include "valve_sdk/math/VMatrix.hpp"
 
-struct stored_records {
-	Vector head;
-	float simulation_time;
-	matrix3x4_t matrix[128];
+#define NUM_OF_TICKS 12
+
+struct StoredData
+{
+	float simtime;
+	Vector hitboxPos;
 };
 
-struct convars {	
-	ConVar* update_rate;
-	ConVar* max_update_rate;
-	ConVar* interp;
-	ConVar* interp_ratio;
-	ConVar* min_interp_ratio;
-	ConVar* max_interp_ratio;
-	ConVar* max_unlag;
-};
-
-extern std::deque<stored_records> records[65];
-extern convars cvars;
-
-class c_backtrack {
+class TimeWarp : public Singleton<TimeWarp>
+{
+	int nLatestTick;
+	
 public:
-	void update() noexcept;
-	void run(CUserCmd*) noexcept;
-	float get_lerp_time() noexcept;
-	int time_to_ticks(float time) noexcept;
-	bool valid_tick(float simtime) noexcept;
-	static void init() {
-		records->clear();
-		
-		cvars.update_rate = g_CVar->FindVar("cl_updaterate");
-		cvars.max_update_rate = g_CVar->FindVar("sv_maxupdaterate");
-		cvars.interp = g_CVar->FindVar("cl_interp");
-		cvars.interp_ratio = g_CVar->FindVar("cl_interp_ratio");
-		cvars.min_interp_ratio = g_CVar->FindVar("sv_client_min_interp_ratio");
-		cvars.max_interp_ratio = g_CVar->FindVar("sv_client_max_interp_ratio");
-		cvars.max_unlag = g_CVar->FindVar("sv_maxunlag");
-	}
+	StoredData TimeWarpData[64][NUM_OF_TICKS];
+	void CreateMove(CUserCmd* cmd);
 };
 
-extern c_backtrack backtrack;

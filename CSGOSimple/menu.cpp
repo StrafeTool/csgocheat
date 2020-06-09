@@ -287,14 +287,21 @@ void RenderEmptyTab()
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
 	ImGui::PopStyleVar();
 	
-    //ImGui::Checkbox("Back Track", g_Options.misc_backtrack);
-    
+    ImGui::Checkbox("Lagcomp", g_Options.misc_backtrack);
+    if (g_Options.misc_backtrack)
+    {
+      ImGui::SliderInt("", g_Options.misc_backtrack_slider, 0, 12);
+    }
     ImGui::Checkbox("Grenade Preview", g_Options.misc_grenadepreview);
     ImGui::Checkbox("Bunny Hop", g_Options.misc_bhop);
     ImGui::Checkbox("Night Mode", g_Options.misc_nightmode);       
     ImGui::Checkbox("Force Crosshair", g_Options.esp_crosshair);
     ImGui::Checkbox("Chams", g_Options.chams_player_enabled);
     ImGui::Checkbox("Ignore-Z", g_Options.chams_player_ignorez); 
+    ImGui::SliderInt("viewmodel_fov:", g_Options.viewmodel_fov, 68, 120);
+    ImGui::Checkbox("Third Person", g_Options.misc_thirdperson);
+    ImGui::Checkbox("Remove zoom", g_Options.misc_removezoom);
+
 
 
 	auto pos = ImGui::GetCurrentWindow()->Pos;
@@ -361,7 +368,7 @@ void Menu::Render()
     static int active_sidebar_tab = 0;
 
     ImGui::SetNextWindowPos(ImVec2{ 0, 0 }, ImGuiSetCond_Once);
-    ImGui::SetNextWindowSize(ImVec2{ 250, 190 }, ImGuiSetCond_Once);
+    ImGui::SetNextWindowSize(ImVec2{ 300, 400 }, ImGuiSetCond_Once);
 
 	if (ImGui::Begin(" ",
 		&_visible,

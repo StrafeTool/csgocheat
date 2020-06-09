@@ -77,8 +77,12 @@ public:
 		//
 		OPTION(bool, misc_grenadepreview, true);
 		OPTION(bool, misc_nightmode, true);
-		OPTION(bool, misc_backtrack, false);
+		OPTION(bool, misc_backtrack, true);
+		OPTION(int, misc_backtrack_slider, 12);
+
+		OPTION(bool, misc_removezoom, false);
 		OPTION(bool, misc_bhop, true);
+		OPTION(bool, misc_autostrafe, true);
 		OPTION(bool, misc_no_hands, false);
 		OPTION(bool, misc_thirdperson, false);
 		OPTION(bool, misc_showranks, true);

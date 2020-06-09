@@ -7,6 +7,19 @@ namespace Math
 	{
 		return FASTSQRT(pow(v1.x - v2.x, 2) + pow(v1.y - v2.y, 2) + pow(v1.z - v2.z, 2));
 	}
+    float DistancePointToLine(Vector Point, Vector LineOrigin, Vector Dir)
+    {
+        auto PointDir = Point - LineOrigin;
+
+        auto TempOffset = PointDir.Dot(Dir) / (Dir.x * Dir.x + Dir.y * Dir.y + Dir.z * Dir.z);
+        if (TempOffset < 0.000001f)
+            return FLT_MAX;
+
+        auto PerpendicularPoint = LineOrigin + (Dir * TempOffset);
+
+        return (Point - PerpendicularPoint).Length();
+    }
+
 	//--------------------------------------------------------------------------------
 	QAngle CalcAngle(const Vector& src, const Vector& dst)
 	{

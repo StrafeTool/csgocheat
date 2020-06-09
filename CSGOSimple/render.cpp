@@ -69,7 +69,19 @@ void Render::BeginScene() {
 		Render::Get().RenderText("CSGOSimple", 10, 5, 18.f, g_Options.color_watermark, false, true, g_pSecondFont);
 
 	if (g_EngineClient->IsInGame() && g_LocalPlayer && g_Options.esp_enabled)
+	{
+		
+
+		if (g_Options.misc_removezoom)
+		{
+			Visuals::Get().ScopeLine();
+		}
+	
 		Visuals::Get().AddToDrawList();
+
+
+
+	}
 
 
 	render_mutex.lock();

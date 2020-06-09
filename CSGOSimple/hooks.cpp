@@ -142,14 +142,34 @@ namespace Hooks {
 		if (Menu::Get().IsVisible())
 			cmd->buttons &= ~IN_ATTACK;
 
-		if (g_Options.misc_bhop)
-			BunnyHop::OnCreateMove(cmd);
+		TimeWarp::Get().CreateMove(cmd);
 
-		//backtrack.run(cmd);
+
+		if (g_Options.misc_bhop)
+		{
+			BunnyHop::OnCreateMove(cmd);
+			BunnyHop::AutoStrafe(cmd);
+		}
+			
+		//backtrack.update();
+	
+		
 
 		// https://github.com/spirthack/CSGOSimple/issues/69
 		if (g_Options.misc_showranks && cmd->buttons & IN_SCORE) // rank revealer will work even after unhooking, idk how to "hide" ranks  again
 			g_CHLClient->DispatchUserMessage(CS_UM_ServerRankRevealAll, 0, 0, nullptr);
+
+	
+		//clamping movement
+		cmd->forwardmove = std::clamp(cmd->forwardmove, -450.0f, 450.0f);
+		cmd->sidemove = std::clamp(cmd->sidemove, -450.0f, 450.0f);
+		cmd->upmove = std::clamp(cmd->upmove, -450.0f, 450.0f);
+
+		// clamping angles
+		cmd->viewangles.pitch = std::clamp(cmd->viewangles.pitch, -89.0f, 89.0f);
+		cmd->viewangles.yaw = std::clamp(cmd->viewangles.yaw, -180.0f, 180.0f);
+		cmd->viewangles.roll = 0.0f;
+
 
 
 		verified->m_cmd = *cmd;
@@ -178,10 +198,16 @@ namespace Hooks {
 	{
 		static auto panelId = vgui::VPANEL{ 0 };
 
-		if (strstr(g_VGuiPanel->GetName(panel), "HudZoom")) {
-			if (g_EngineClient->IsConnected() && g_EngineClient->IsInGame())
-				return;
+
+		if (g_Options.misc_removezoom)
+		{
+			if (strstr(g_VGuiPanel->GetName(panel), "HudZoom")) {
+				if (g_EngineClient->IsConnected() && g_EngineClient->IsInGame())
+					return;
+			}
+
 		}
+
 
 		static auto oPaintTraverse = vguipanel_hook.get_original<decltype(&hkPaintTraverse)>(index::PaintTraverse);
 
@@ -258,8 +284,8 @@ namespace Hooks {
 			grenadepre->SetValue(1);
 		}
 
-		//if (stage == FRAME_NET_UPDATE_END && g_EngineClient->IsInGame()) 
-		//	backtrack.update();
+	/*	if (stage == FRAME_NET_UPDATE_END && g_EngineClient->IsInGame()) 
+			backtrack.update();*/
 
 		ofunc(g_CHLClient, edx, stage);
 	}

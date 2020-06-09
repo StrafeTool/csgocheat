@@ -7,6 +7,9 @@
 #define DEG2RAD(x) DirectX::XMConvertToRadians(x)
 #define M_PI 3.14159265358979323846
 #define PI_F	((float)(M_PI)) 
+#define TICK_INTERVAL			(g_GlobalVars->interval_per_tick)
+#define TICKS_TO_TIME(t) ( g_GlobalVars->interval_per_tick * (t) )
+#define TIME_TO_TICKS( dt )		( (int)( 0.5f + (float)(dt) / TICK_INTERVAL ) )
 
 namespace Math
 {
@@ -20,6 +23,7 @@ namespace Math
 		return *(float*)&i;
 	}
 	float VectorDistance(const Vector& v1, const Vector& v2);
+	float DistancePointToLine(Vector Point, Vector LineOrigin, Vector Dir);
 	QAngle CalcAngle(const Vector& src, const Vector& dst);
 	float GetFOV(const QAngle& viewAngle, const QAngle& aimAngle);
 	template<class T>

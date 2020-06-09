@@ -1,7 +1,7 @@
 #include <algorithm>
 
 #include "visuals.hpp"
-
+#include "../backtrack.hpp"
 #include "../options.hpp"
 #include "../helpers/math.hpp"
 #include "../helpers/utils.hpp"
@@ -72,6 +72,9 @@ Visuals::~Visuals() {
 
 //--------------------------------------------------------------------------------
 void Visuals::Render() {
+
+
+
 }
 //--------------------------------------------------------------------------------
 bool Visuals::Player::Begin(C_BasePlayer* pl)
@@ -281,8 +284,8 @@ void Visuals::ScopeLine()
 	{
 		int w, h;
 		g_EngineClient->GetScreenSize(w, h);
-		Render::Get().RenderLine(w / 2, 0, w / 2, h, Color(15, 15, 15, 255), 5.f);
-		Render::Get().RenderLine(0, h / 2, w, h / 2, Color(15, 15, 15, 255), 5.f);
+		Render::Get().RenderLine(w / 2, 0, w / 2, h, Color(15, 15, 15, 255), 1.f);
+		Render::Get().RenderLine(0, h / 2, w, h / 2, Color(15, 15, 15, 255), 1.f);
 	}
 }
 //--------------------------------------------------------------------------------
@@ -562,6 +565,14 @@ void Visuals::ThirdPerson() {
 }
 
 
+
+
+
+	
+	
+
+
+
 void Visuals::AddToDrawList() {
 	for (auto i = 1; i <= g_EntityList->GetHighestEntityIndex(); ++i) {
 		auto entity = C_BaseEntity::GetEntityByIndex(i);
@@ -575,6 +586,11 @@ void Visuals::AddToDrawList() {
 		if (i <= g_GlobalVars->maxClients) {
 			auto player = Player();
 			if (player.Begin((C_BasePlayer*)entity)) {
+
+
+			
+
+
 				if (g_Options.esp_player_snaplines) player.RenderSnapline();
 				if (g_Options.esp_player_boxes)     player.RenderBox();
 				if (g_Options.esp_player_weapons)   player.RenderWeaponName();
