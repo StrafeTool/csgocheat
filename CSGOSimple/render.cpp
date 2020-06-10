@@ -42,17 +42,26 @@ void Render::GetFonts() {
 		14.f);
 	
 	// esp font
-	g_pDefaultFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(
-		Fonts::Droid_compressed_data,
-		Fonts::Droid_compressed_size,
-		18.f);
+	//g_pDefaultFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(
+	//	Fonts::Droid_compressed_data,
+	//	Fonts::Droid_compressed_size,
+	//	18.f);
 
 	//name font
-	g_namefont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(
+	/*g_namefont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(
 		Fonts::Droid_compressed_data,
 		Fonts::Droid_compressed_size,
 		13.f);
-	
+	*/
+
+	g_namefont = ImGui::GetIO().Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\Tahoma.ttf", 12.0f);
+
+
+	g_pDefaultFont = ImGui::GetIO().Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\Tahoma.ttf", 12.0f);
+
+
+
+
 
 	// font for watermark; just example
 	g_pSecondFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(

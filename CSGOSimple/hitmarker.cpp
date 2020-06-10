@@ -83,10 +83,19 @@ void HitMarkerEvent::Paint(void)
 
 		if (hitMarkerInfo.size() > 0)
 		{
-			int lineSize = 12;
-			g_VGuiSurface->DrawSetColor(Color(255, 255, 255, (int)(alpha * 255.f)));
-			g_VGuiSurface->DrawLine(width / 2 - lineSize / 2, height / 2 - lineSize / 2, width / 2 + lineSize / 2, height / 2 + lineSize / 2);
-			g_VGuiSurface->DrawLine(width / 2 + lineSize / 2, height / 2 - lineSize / 2, width / 2 - lineSize / 2, height / 2 + lineSize / 2);
+			int screenSizeX, screenCenterX;
+			int screenSizeY, screenCenterY;
+			g_EngineClient->GetScreenSize(screenSizeX, screenSizeY);
+
+			screenCenterX = screenSizeX / 2;
+			screenCenterY = screenSizeY / 2;
+
+			int lineSize = 8;
+			g_VGuiSurface->DrawSetColor(Color(200, 200, 190, (int)(alpha * 255.f)));
+			g_VGuiSurface->DrawLine(screenCenterX - lineSize, screenCenterY - lineSize, screenCenterX - (lineSize / 4), screenCenterY - (lineSize / 4));
+			g_VGuiSurface->DrawLine(screenCenterX - lineSize, screenCenterY + lineSize, screenCenterX - (lineSize / 4), screenCenterY + (lineSize / 4));
+			g_VGuiSurface->DrawLine(screenCenterX + lineSize, screenCenterY + lineSize, screenCenterX + (lineSize / 4), screenCenterY + (lineSize / 4));
+			g_VGuiSurface->DrawLine(screenCenterX + lineSize, screenCenterY - lineSize, screenCenterX + (lineSize / 4), screenCenterY - (lineSize / 4));
 		}
 	}
 }

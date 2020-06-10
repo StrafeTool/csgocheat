@@ -1,6 +1,6 @@
 #include "hooks.hpp"
 #include <intrin.h>  
-
+#include "features/ragebot.h"
 #include "render.hpp"
 #include "menu.hpp"
 #include "options.hpp"
@@ -148,14 +148,54 @@ namespace Hooks {
 		if (!cmd || !cmd->command_number)
 			return;
 		
+
+		C_BaseCombatWeapon* Weapon = g_LocalPlayer->m_hActiveWeapon();
 		if (Menu::Get().IsVisible())
 			cmd->buttons &= ~IN_ATTACK;
 
-		TimeWarp::Get().CreateMove(cmd);
+
+		if (g_Options.misc_bhop)
+		{
+			BunnyHop::OnCreateMove(cmd);
+			BunnyHop::AutoStrafe(cmd);
+		}
+
+
+		MovementFix::Get().Start(cmd);
+
+		RageAimbot::Get().StartEnginePred(cmd);
+
+
+		if (g_Options.misc_backtrack)
+			TimeWarp::Get().CreateMove(cmd);
+
+	
+		if (g_Options.rage_enable)
+		{
+		/*	Variables.LegitAimbotEnabled = false;
+			Variables.LegitBacktrackEnabled = false;*/
+			RageAimbot::Get().StoreRecords();
+			RageAimbot::Get().Do(cmd, Weapon, bSendPacket);
+		/*	if (Variables.RageAntiaimEnabled)
+				RageAimbot::Get().DoAntiaim(cmd, Weapon, bSendPacket);*/
+		}
+		else
+		{
+			if (g_Options.misc_triggerbot)
+				LegitBacktrack::Get().Do(cmd);
+
+			if (g_Options.legit_enable)
+				LegitAimbot::Get().Do(cmd, Weapon);
+		}
 
 		if (g_Options.misc_triggerbot)
 			triggerbot::Triggerbot(cmd);
 
+
+
+		RageAimbot::Get().EndEnginePred();
+
+		MovementFix::Get().End(cmd);
 		if (g_Options.misc_fakelag)
 			antiaim::Get().createmove(cmd, bSendPacket);
 
@@ -172,12 +212,6 @@ namespace Hooks {
 			{
 				g_EngineClient->ClientCmd_Unrestricted("cl_righthand 0");
 			}
-		}
-
-		if (g_Options.misc_bhop)
-		{
-			BunnyHop::OnCreateMove(cmd);
-			BunnyHop::AutoStrafe(cmd);
 		}
 			
 		//backtrack.update();
@@ -258,10 +292,10 @@ namespace Hooks {
 			Render::Get().BeginScene();
 		}
 
-		//if (g_Options.misc_hitmarker)
-		//{
-		//	HitMarkerEvent::Get().Paint();
-		//}
+		if (g_Options.misc_hitmarker)
+		{
+			HitMarkerEvent::Get().Paint();
+		}
 
 	}
 	//--------------------------------------------------------------------------------

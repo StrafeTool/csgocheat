@@ -181,6 +181,7 @@ public:
 	bool HasBullets();
 	bool CanFire();
 	bool IsGrenade();
+	bool IsZeus();
 	bool IsKnife();
 	bool IsReloading();
 	bool IsRifle();
@@ -206,6 +207,27 @@ public:
 	{
 		return static_cast<C_BasePlayer*>(GetEntityByIndex(i));
 	}
+	Vector& GetAbsOrigin()
+	{
+		if (!this)
+			return Vector();
+		typedef Vector& (__thiscall* OriginalFn)(void*);
+		return CallVFunction<OriginalFn>(this, 10)(this);
+	}
+	void SetAbsOrigin(const Vector& origin)
+	{
+		using SetAbsOriginFn = void(__thiscall*)(void*, const Vector& origin);
+		static SetAbsOriginFn SetAbsOrigin = (SetAbsOriginFn)Utils::PatternScan(GetModuleHandleA("client.dll"), "55 8B EC 83 E4 F8 51 53 56 57 8B F1 E8");
+		SetAbsOrigin(this, origin);
+	}
+	Vector& GetAbsAngles()
+	{
+		if (!this)
+			return Vector();
+		typedef Vector& (__thiscall* OriginalFn)(void*);
+		return CallVFunction<OriginalFn>(this, 11)(this);
+	}
+
 
 	NETVAR(bool, m_bHasDefuser, "DT_CSPlayer", "m_bHasDefuser");
 	NETVAR(bool, m_bGunGameImmunity, "DT_CSPlayer", "m_bGunGameImmunity");
@@ -280,6 +302,10 @@ public:
 		static unsigned int _m_vecBaseVelocity = Utils::FindInDataMap(GetPredDescMap(), "m_vecBaseVelocity");
 		return *(Vector*)((uintptr_t)this + _m_vecBaseVelocity);
 	}
+	bool IsEnemy()
+	{
+		return (this->m_iTeamNum() != g_LocalPlayer->m_iTeamNum());
+	}
 
 	float_t &m_flMaxspeed()
 	{
@@ -297,6 +323,8 @@ public:
 	Vector        GetHitboxPos(int hitbox_id);
 	mstudiobbox_t * GetHitbox(int hitbox_id);
 	bool          GetHitboxPos(int hitbox, Vector &output);
+	Vector		  GetHitboxPos2(int hitbox_id, matrix3x4_t* boneMatrix);
+	//(int hitbox_id, matrix3x4_t* boneMatrix)
 	Vector        GetBonePos(int bone);
 	bool          CanSeePlayer(C_BasePlayer* player, int hitbox);
 	bool          CanSeePlayer(C_BasePlayer* player, const Vector& pos);

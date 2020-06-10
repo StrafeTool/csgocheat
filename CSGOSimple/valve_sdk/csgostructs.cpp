@@ -76,6 +76,11 @@ bool C_BaseCombatWeapon::IsGrenade()
 	return GetCSWeaponData()->iWeaponType == WEAPONTYPE_GRENADE;
 }
 
+bool C_BaseCombatWeapon::IsZeus()
+{
+	return this->m_Item().m_iItemDefinitionIndex() == WEAPON_TASER;
+}
+
 bool C_BaseCombatWeapon::IsGun()
 {
 	switch (GetCSWeaponData()->iWeaponType)
@@ -257,6 +262,7 @@ void C_BasePlayer::CreateAnimationState(CCSGOPlayerAnimState *state)
 	CreateAnimState(state, this);
 }
 
+
 Vector C_BasePlayer::GetEyePos()
 {
 	return m_vecOrigin() + m_vecViewOffset();
@@ -328,6 +334,25 @@ mstudiobbox_t* C_BasePlayer::GetHitbox(int hitbox_id)
 	}
 	return nullptr;
 }
+Vector C_BasePlayer::GetHitboxPos2(int hitbox_id, matrix3x4_t* boneMatrix)
+{
+	auto studio_model = g_MdlInfo->GetStudiomodel(GetModel());
+	if (studio_model) {
+		auto hitbox = studio_model->GetHitboxSet(0)->GetHitbox(hitbox_id);
+		if (hitbox) {
+			auto
+				min = Vector{},
+				max = Vector{};
+
+			Math::VectorTransform(hitbox->bbmin, boneMatrix[hitbox->bone], min);
+			Math::VectorTransform(hitbox->bbmax, boneMatrix[hitbox->bone], max);
+
+			return (min + max) / 2.0f;
+		}
+	}
+	return Vector{};
+}
+
 
 bool C_BasePlayer::GetHitboxPos(int hitbox, Vector &output)
 {

@@ -100,9 +100,11 @@
     <ClCompile Include="backtrack.cpp" />
     <ClCompile Include="bulletbeams.cpp" />
     <ClCompile Include="features\antiaim.cpp" />
+    <ClCompile Include="features\autowall.cpp" />
     <ClCompile Include="features\bhop.cpp" />
     <ClCompile Include="features\chams.cpp" />
     <ClCompile Include="features\glow.cpp" />
+    <ClCompile Include="features\ragebot.cpp" />
     <ClCompile Include="features\triggerbot.cpp" />
     <ClCompile Include="features\visuals.cpp" />
     <ClCompile Include="helpers\input.cpp" />
@@ -139,6 +141,8 @@
     <ClInclude Include="bulletbeams.hpp" />
     <ClInclude Include="config.hpp" />
     <ClInclude Include="features\antiaim.hpp" />
+    <ClInclude Include="features\autowall.h" />
+    <ClInclude Include="features\ragebot.h" />
     <ClInclude Include="features\triggerbot.h" />
     <ClInclude Include="fonts\cousine.hpp" />
     <ClInclude Include="fonts\fonts.hpp" />

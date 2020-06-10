@@ -8,6 +8,50 @@
 
 vgui::HFont esp_font;
 
+void Renders::CreateFonts()
+{
+	VerdanaBold12 = g_VGuiSurface->CreateFont_();
+
+	g_VGuiSurface->SetFontGlyphSet(VerdanaBold12, "Tahoma Bold", 12, 400, 0, 0, FONTFLAG_DROPSHADOW);
+	//g_VGuiSurface->SetFontGlyphSet(FuckMyAss, "Counter-Strike", 18, 500, 0, 0, FONTFLAG_ANTIALIAS);
+}
+void Renders::TextSize(int& Width, int& Height, const char* Text, vgui::HFont Font)
+{
+	std::wstring WText = std::wstring(std::string_view(Text).begin(), std::string_view(Text).end());
+	g_VGuiSurface->GetTextSize(Font, WText.c_str(), Width, Height);
+}
+void Renders::Text(int X, int Y, const char* Text, vgui::HFont Font, Color DrawColor, bool Center/*, bool eatmyasscheeks*/)
+{
+	std::wstring WText = std::wstring(std::string_view(Text).begin(), std::string_view(Text).end());
+	g_VGuiSurface->DrawSetTextFont(Font);
+	g_VGuiSurface->DrawSetTextColor(DrawColor);
+	if (Center)
+	{
+		int TextWidth, TextHeight;
+		Renders::Get().TextSize(TextWidth, TextHeight, Text, Font);
+		g_VGuiSurface->DrawSetTextPos(X - TextWidth / 2, Y);
+	}
+	else
+		g_VGuiSurface->DrawSetTextPos(X, Y);
+	g_VGuiSurface->DrawPrintText(WText.c_str(), wcslen(WText.c_str()));
+}
+void Renders::FilledRectange(int X1, int Y1, int X2, int Y2, Color DrawColor)
+{
+	g_VGuiSurface->DrawSetColor(DrawColor);
+	g_VGuiSurface->DrawFilledRect(X1, Y1, X2, Y2);
+}
+void Renders::OutlinedRectange(int X1, int Y1, int X2, int Y2, Color DrawColor)
+{
+	g_VGuiSurface->DrawSetColor(DrawColor);
+	g_VGuiSurface->DrawOutlinedRect(X1, Y1, X2, Y2);
+}
+void Renders::Line(int X1, int Y1, int X2, int Y2, Color DrawColor)
+{
+	g_VGuiSurface->DrawSetColor(DrawColor);
+	g_VGuiSurface->DrawLine(X1, Y1, X2, Y2);
+}
+
+
 RECT GetBBox(C_BaseEntity* ent)
 {
 	RECT rect{};
@@ -121,26 +165,10 @@ bool Visuals::CreateFonts()
 }
 //--------------------------------------------------------------------------------
 void Visuals::Player::RenderBox() {
+	Renders::Get().OutlinedRectange(ctx.bbox.left - 1, ctx.bbox.top - 1, ctx.bbox.right + 1, ctx.bbox.bottom + 1, Color(0, 0, 0, 150));
+	Renders::Get().OutlinedRectange(ctx.bbox.left + 1, ctx.bbox.top + 1, ctx.bbox.right - 1, ctx.bbox.bottom - 1, Color(0, 0, 0, 150));
+	Renders::Get().OutlinedRectange(ctx.bbox.left, ctx.bbox.top, ctx.bbox.right, ctx.bbox.bottom, Color(255, 255, 255, 255));
 
-		//g_render.box(ctx.bbox.left - 1, ctx.bbox.top - 1, ctx.bbox.right + 1, ctx.bbox.bottom + 1,
-		//	Color(0, 0, 0, 25 + static_cast<int> (ctx.percent * 230)), 1.f);
-		//g_render.box(ctx.bbox.left + 1, ctx.bbox.top + 1, ctx.bbox.right - 1, ctx.bbox.bottom - 1,
-		//	Color(0, 0, 0, 25 + static_cast<int> (ctx.percent * 230)), 1.f);
-		//g_render.box(ctx.bbox.left, ctx.bbox.top, ctx.bbox.right, ctx.bbox.bottom, ctx.clr, 1.f);
-
-
-
-		Render::Get().RenderBox(ctx.bbox.left - 1, ctx.bbox.top - 1, ctx.bbox.right + 1, ctx.bbox.bottom + 1,
-			Color(0, 0, 0, 25 + static_cast<int> (ctx.percent * 230)), .5f);
-
-		Render::Get().RenderBox(ctx.bbox.left + 1, ctx.bbox.top + 1, ctx.bbox.right - 1, ctx.bbox.bottom - 1,
-			Color(0, 0, 0, 25 + static_cast<int> (ctx.percent * 230)), .5f);
-
-		Render::Get().RenderBox(ctx.bbox.left, ctx.bbox.top, ctx.bbox.right, ctx.bbox.bottom, ctx.clr, .5f);
-
-
-
-	//Render::Get().RenderBoxByType(ctx.bbox.left, ctx.bbox.top, ctx.bbox.right, ctx.bbox.bottom, ctx.clr, 1);
 }
 //--------------------------------------------------------------------------------
 void Visuals::Player::RenderName()
@@ -154,14 +182,16 @@ void Visuals::Player::RenderName()
 //--------------------------------------------------------------------------------
 void Visuals::Player::RenderHealth()
 {
-	auto  hp = ctx.pl->m_iHealth();
+	int health = ctx.pl->m_iHealth();
+	if (health > 100)
+		health = 100;
+
 	float box_h = (float)fabs(ctx.bbox.bottom - ctx.bbox.top);
-	//float off = (box_h / 6.f) + 5;
-	float off = 8;
+	float off = 6;
 
-	int height = (box_h * hp) / 100;
+	auto height = box_h - (((box_h * health) / 100));
 
-	int green = int(hp * 2.55f);
+	int green = int(health * 2.55f);
 	int red = 255 - green;
 
 	int x = ctx.bbox.left - off;
@@ -169,8 +199,19 @@ void Visuals::Player::RenderHealth()
 	int w = 4;
 	int h = box_h;
 
-	Render::Get().RenderBox(x, y, x + w, y + h, Color::Black, 1.f, true);
-	Render::Get().RenderBox(x + 1, y + 1, x + w - 1, y + height - 2, Color(red, green, 0, 255), 1.f, true);
+	g_VGuiSurface->DrawSetColor(Color::Black);
+	g_VGuiSurface->DrawFilledRect(x, y, x + w, y + h);
+
+	g_VGuiSurface->DrawSetColor(Color(red, green, 0, 255));
+	g_VGuiSurface->DrawOutlinedRect(x + 1, y + height + 1, x + w - 1, y + h - 1);
+
+
+
+	std::string hp = std::to_string(health);
+	auto name = (health < 0.f) ? "%d" : hp;
+	auto sz = g_namefont->CalcTextSizeA(14.f, FLT_MAX, 0.0f, name.c_str());
+	if (health != 100)
+		Render::Get().RenderText(name, ImVec2(x - w, y + height), 14.f, Color(255, 255, 255, 255));
 }
 //--------------------------------------------------------------------------------
 void Visuals::Player::RenderArmour()
@@ -613,10 +654,10 @@ void Visuals::AddToDrawList() {
 			if (player.Begin((C_BasePlayer*)entity)) {
 				if (g_Options.esp_player_snaplines) player.RenderSnapline();
 				if (g_Options.esp_player_boxes)     player.RenderBox();
-				if (g_Options.esp_player_weapons)   player.RenderWeaponName();
+				if (g_Options.esp_player_boxes)   player.RenderWeaponName();
 				if (g_Options.esp_player_names)     player.RenderName();
-				if (g_Options.esp_player_health)    player.RenderHealth();
-				if (g_Options.esp_player_armour)    player.RenderArmour();
+				if (g_Options.esp_player_boxes)    player.RenderHealth();
+				if (g_Options.esp_player_boxes)    player.RenderArmour();
 			}
 		}
 		else if (g_Options.esp_dropped_weapons && entity->IsWeapon())

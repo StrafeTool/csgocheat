@@ -9,6 +9,24 @@
 
 extern unsigned long esp_font;
 
+
+class Renders
+	: public Singleton<Renders>
+{
+	friend class Singleton<Renders>;
+private:
+
+public:
+	vgui::HFont VerdanaBold12;
+	void CreateFonts();
+	void Text(int X, int Y, const char* Text, vgui::HFont Font, Color DrawColor, bool Center);
+	void TextSize(int& Width, int& Height, const char* Text, vgui::HFont Font);
+	void FilledRectange(int X1, int Y1, int X2, int Y2, Color DrawColor);
+	void OutlinedRectange(int X1, int Y1, int X2, int Y2, Color DrawColor);
+	void Line(int X1, int Y1, int X2, int Y2, Color DrawColor);
+};
+
+
 class Visuals : public Singleton<Visuals>
 {
 	friend class Singleton<Visuals>;

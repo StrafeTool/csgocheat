@@ -289,8 +289,9 @@ void RenderEmptyTab()
 
     ImGui::Checkbox("Triggerbot", g_Options.misc_triggerbot);
     ImGui::Checkbox("Lagcomp", g_Options.misc_backtrack);
-    if (g_Options.misc_backtrack)
-        ImGui::SliderInt("", g_Options.misc_backtrack_slider, 0, 12);
+    ImGui::Checkbox("autoshoot", g_Options.legit_autofire);
+  /*  if (g_Options.misc_backtrack)
+        ImGui::SliderInt("", g_Options.misc_backtrack_slider, 0, 12);*/
     ImGui::Checkbox("Fakelag", g_Options.misc_fakelag);
     if (g_Options.misc_fakelag)
         ImGui::SliderInt(" ", g_Options.misc_fakelagammount, 0, 14);
@@ -299,7 +300,8 @@ void RenderEmptyTab()
     ImGui::Checkbox("Night Mode", g_Options.misc_nightmode);   
     ImGui::Checkbox("Force Crosshair", g_Options.esp_crosshair);
     ImGui::Checkbox("Boxes", g_Options.esp_player_boxes);
-    ImGui::Checkbox("Names", g_Options.esp_player_names);
+    ImGui::Checkbox("Names", g_Options.esp_player_names);//glow_enemies_only
+    ImGui::Checkbox("Glow", g_Options.glow_players);
     ImGui::Checkbox("Chams", g_Options.chams_player_enabled);
     ImGui::Checkbox("Ignore-Z", g_Options.chams_player_ignorez); 
     ImGui::Checkbox("Viewmodel", g_Options.viewmodel_fov);
@@ -375,7 +377,7 @@ void Menu::Render()
     static int active_sidebar_tab = 0;
 
     ImGui::SetNextWindowPos(ImVec2{ 0, 0 }, ImGuiSetCond_Once);
-    ImGui::SetNextWindowSize(ImVec2{ 320, 420 }, ImGuiSetCond_Once);
+    ImGui::SetNextWindowSize(ImVec2{ 320, 500 }, ImGuiSetCond_Once);
 
 	if (ImGui::Begin(" ",
 		&_visible,
@@ -397,8 +399,8 @@ void Menu::CreateStyle()
 {
 	ImGui::StyleColorsDark();
 	ImGui::SetColorEditOptions(ImGuiColorEditFlags_HEX);
-	_style.FrameRounding = 4.f;
-	_style.WindowRounding = 4.f;
+	_style.FrameRounding = 10.f;
+	_style.WindowRounding = 10.f;
 	_style.ChildRounding = 0.f;
 	_style.Colors[ImGuiCol_Button] = ImVec4(0.25f, 0.3f, 0.35f, 1.0f);
 	_style.Colors[ImGuiCol_Header] = ImVec4(0.25f, 0.3f, 0.35f, 1.0f);

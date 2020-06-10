@@ -422,6 +422,25 @@ public:
     int                 hitbox;                       // box hit by trace in studio
 
     CGameTrace() {}
+    CGameTrace& CGameTrace::operator=(const CGameTrace& other)
+    {
+        startpos = other.startpos;
+        endpos = other.endpos;
+        plane = other.plane;
+        fraction = other.fraction;
+        contents = other.contents;
+        dispFlags = other.dispFlags;
+        allsolid = other.allsolid;
+        startsolid = other.startsolid;
+        fractionleftsolid = other.fractionleftsolid;
+        surface = other.surface;
+        hitgroup = other.hitgroup;
+        physicsbone = other.physicsbone;
+        worldSurfaceIndex = other.worldSurfaceIndex;
+        hit_entity = other.hit_entity;
+        hitbox = other.hitbox;
+        return *this;
+    }
 
 private:
     // No copy constructors allowed
@@ -444,25 +463,7 @@ private:
         startsolid = other.startsolid;
     }
 
-    CGameTrace& CGameTrace::operator=(const CGameTrace& other)
-    {
-        startpos = other.startpos;
-        endpos = other.endpos;
-        plane = other.plane;
-        fraction = other.fraction;
-        contents = other.contents;
-        dispFlags = other.dispFlags;
-        allsolid = other.allsolid;
-        startsolid = other.startsolid;
-        fractionleftsolid = other.fractionleftsolid;
-        surface = other.surface;
-        hitgroup = other.hitgroup;
-        physicsbone = other.physicsbone;
-        worldSurfaceIndex = other.worldSurfaceIndex;
-        hit_entity = other.hit_entity;
-        hitbox = other.hitbox;
-        return *this;
-    }
+
 };
 
 inline bool CGameTrace::DidHit() const

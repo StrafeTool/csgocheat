@@ -40,5 +40,7 @@ namespace Math
     void AngleVectors(const QAngle &angles, Vector& forward);
     void AngleVectors(const QAngle &angles, Vector& forward, Vector& right, Vector& up);
     void VectorAngles(const Vector& forward, QAngle& angles);
+	void VectorAngles(const Vector& forward, Vector& up, QAngle& angles);
     bool WorldToScreen(const Vector& in, Vector& out);
+	float RandomFloat(float min, float max);
 }

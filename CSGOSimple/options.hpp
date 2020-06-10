@@ -28,6 +28,19 @@ public:
 class Options
 {
 public:
+		//rage
+		OPTION(float, RageAimbotMinDmg, 30);
+		OPTION(float, RageAimbotHitchance, 60);
+		OPTION(bool, rage_enable, false);
+
+
+		//legit
+		OPTION(bool, legit_enable, true);
+		OPTION(float, legit_fov, 10.f);
+		OPTION(int, legit_hitbox, 0);
+		OPTION(int, LegitAimbotRcs, 100);//LegitAimbotSmooth
+		OPTION(int, LegitAimbotSmooth, 5);
+		OPTION(bool, legit_autofire, 0);
 		// 
 		// ESP
 		// 
@@ -49,7 +62,7 @@ public:
 		// GLOW
 		// 
 		OPTION(bool, glow_enabled, true);
-		OPTION(bool, glow_enemies_only, false);
+		OPTION(bool, glow_enemies_only, true);
 		OPTION(bool, glow_players, false);
 		OPTION(bool, glow_chickens, false);
 		OPTION(bool, glow_c4_carrier, false);
@@ -89,7 +102,7 @@ public:
 		OPTION(float, misc_nightmode_prop_g, 1.f);
 		OPTION(float, misc_nightmode_prop_b, 1.f);
 		OPTION(float, misc_nightmode_prop_alpha, 1.f);
-		OPTION(bool, misc_backtrack, true);
+		OPTION(bool, misc_backtrack, false);
 		OPTION(int, misc_backtrack_slider, 12);
 		OPTION(bool, misc_removezoom, false);
 		OPTION(bool, misc_bhop, true);
@@ -115,7 +128,7 @@ public:
 		OPTION(Color, color_esp_item, Color(255, 255, 255));
 
 		OPTION(Color, color_glow_ally, Color(0, 128, 255));
-		OPTION(Color, color_glow_enemy, Color(255, 0, 0));
+		OPTION(Color, color_glow_enemy, Color(176, 37, 204, 190));
 		OPTION(Color, color_glow_chickens, Color(0, 128, 0));
 		OPTION(Color, color_glow_c4_carrier, Color(255, 255, 0));
 		OPTION(Color, color_glow_planted_c4, Color(128, 0, 128));
@@ -124,8 +137,8 @@ public:
 
 		OPTION(Color, color_chams_player_ally_visible, Color(0, 128, 255));
 		OPTION(Color, color_chams_player_ally_occluded, Color(0, 255, 128));
-		OPTION(Color, color_chams_player_enemy_visible, Color(0, 240, 255));
-		OPTION(Color, color_chams_player_enemy_occluded, Color(0, 0, 0, 250));
+		OPTION(Color, color_chams_player_enemy_visible, Color(96, 196, 20));
+		OPTION(Color, color_chams_player_enemy_occluded, Color(27, 161, 209));
 		OPTION(Color, color_chams_arms_visible, Color(0, 128, 255));
 		OPTION(Color, color_chams_arms_occluded, Color(0, 128, 255));
 		OPTION(Color, color_watermark, Color(0, 128, 255)); // no menu config cuz its useless
