@@ -287,8 +287,8 @@ void RenderEmptyTab()
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
 	ImGui::PopStyleVar();
 
-    ImGui::Checkbox("Triggerbot", g_Options.misc_triggerbot);
-    ImGui::Checkbox("Lagcomp", g_Options.misc_backtrack);
+    ImGui::Checkbox("backtrack", g_Options.misc_triggerbot);
+    //ImGui::Checkbox("Lagcomp", g_Options.misc_backtrack);
     ImGui::Checkbox("autoshoot", g_Options.legit_autofire);
   /*  if (g_Options.misc_backtrack)
         ImGui::SliderInt("", g_Options.misc_backtrack_slider, 0, 12);*/

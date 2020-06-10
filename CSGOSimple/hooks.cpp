@@ -162,12 +162,10 @@ namespace Hooks {
 
 
 		MovementFix::Get().Start(cmd);
-
 		RageAimbot::Get().StartEnginePred(cmd);
 
-
-		if (g_Options.misc_backtrack)
-			TimeWarp::Get().CreateMove(cmd);
+		
+		TimeWarp::Get().CreateMove(cmd);
 
 	
 		if (g_Options.rage_enable)
@@ -188,8 +186,8 @@ namespace Hooks {
 				LegitAimbot::Get().Do(cmd, Weapon);
 		}
 
-		if (g_Options.misc_triggerbot)
-			triggerbot::Triggerbot(cmd);
+		/*if (g_Options.misc_triggerbot)
+			triggerbot::Triggerbot(cmd);*/
 
 
 
