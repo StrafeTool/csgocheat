@@ -200,10 +200,8 @@ namespace Hooks {
 
 		if (g_Options.misc_removezoom)
 		{
-			if (!g_LocalPlayer && g_LocalPlayer->IsAlive() || g_EngineClient->IsConnected() && g_EngineClient->IsInGame())
-				return;
-
 			if (strstr(g_VGuiPanel->GetName(panel), "HudZoom")) {
+				if (g_EngineClient->IsConnected() && g_EngineClient->IsInGame())
 					return;
 			}
 		}
