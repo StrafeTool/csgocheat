@@ -75,6 +75,7 @@ public:
 		//
 		// MISC
 		//
+		OPTION(bool, misc_triggerbot, false);
 		OPTION(bool, misc_fakelag, false);
 		OPTION(int, misc_fakelagammount, 0);
 		OPTION(bool, misc_spectator, false);

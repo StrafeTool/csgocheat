@@ -287,6 +287,7 @@ void RenderEmptyTab()
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
 	ImGui::PopStyleVar();
 
+    ImGui::Checkbox("Triggerbot", g_Options.misc_triggerbot);
     ImGui::Checkbox("Lagcomp", g_Options.misc_backtrack);
     if (g_Options.misc_backtrack)
         ImGui::SliderInt("", g_Options.misc_backtrack_slider, 0, 12);
@@ -374,7 +375,7 @@ void Menu::Render()
     static int active_sidebar_tab = 0;
 
     ImGui::SetNextWindowPos(ImVec2{ 0, 0 }, ImGuiSetCond_Once);
-    ImGui::SetNextWindowSize(ImVec2{ 360, 380 }, ImGuiSetCond_Once);
+    ImGui::SetNextWindowSize(ImVec2{ 320, 420 }, ImGuiSetCond_Once);
 
 	if (ImGui::Begin(" ",
 		&_visible,

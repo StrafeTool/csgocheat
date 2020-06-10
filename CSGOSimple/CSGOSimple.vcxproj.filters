@@ -137,6 +137,9 @@
     <ClCompile Include="features\antiaim.cpp">
       <Filter>Source Files\features</Filter>
     </ClCompile>
+    <ClCompile Include="features\triggerbot.cpp">
+      <Filter>Source Files\features</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="valve_sdk\misc\BaseHandle.hpp">
@@ -416,6 +419,9 @@
       <Filter>Header Files\features</Filter>
     </ClInclude>
     <ClInclude Include="features\antiaim.hpp">
+      <Filter>Header Files\features</Filter>
+    </ClInclude>
+    <ClInclude Include="features\triggerbot.h">
       <Filter>Header Files\features</Filter>
     </ClInclude>
   </ItemGroup>

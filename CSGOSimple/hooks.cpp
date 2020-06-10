@@ -14,6 +14,7 @@
 #include "bulletbeams.hpp"
 #include "hitmarker.hpp"
 #include "features/antiaim.hpp"
+#include "features/triggerbot.h"
 #pragma intrinsic(_ReturnAddress)  
 
 namespace Hooks {
@@ -151,6 +152,9 @@ namespace Hooks {
 			cmd->buttons &= ~IN_ATTACK;
 
 		TimeWarp::Get().CreateMove(cmd);
+
+		if (g_Options.misc_triggerbot)
+			triggerbot::Triggerbot(cmd);
 
 		if (g_Options.misc_fakelag)
 			antiaim::Get().createmove(cmd, bSendPacket);
