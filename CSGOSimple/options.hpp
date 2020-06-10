@@ -75,6 +75,11 @@ public:
 		//
 		// MISC
 		//
+		OPTION(bool, misc_fakelag, false);
+		OPTION(int, misc_fakelagammount, 0);
+		OPTION(bool, misc_spectator, false);
+		OPTION(bool, misc_hitmarker, false);
+		OPTION(bool, misc_lefthand_knife, false);
 		OPTION(bool, misc_bulletbeams, false);
 		OPTION(bool, misc_grenadepreview, true);
 		OPTION(bool, misc_nightmode, true);
@@ -93,7 +98,7 @@ public:
 		OPTION(bool, misc_showranks, true);
 		OPTION(bool, misc_watermark, false);
 		OPTION(float, misc_thirdperson_dist, 150.f);
-		OPTION(int, viewmodel_fov, 68);		
+		OPTION(bool, viewmodel_fov, false);		
 
 		// 
 		// COLORS

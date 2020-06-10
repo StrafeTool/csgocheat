@@ -268,7 +268,7 @@ void RenderMiscTab()
 		//ImGui::Checkbox("Watermark##hc", g_Options.misc_watermark);
         //ImGui::PushItemWidth(-1.0f);
 		ImGui::NextColumn();
-        ImGui::SliderInt("viewmodel_fov:", g_Options.viewmodel_fov, 68, 120);
+        //ImGui::SliderInt("viewmodel_fov:", g_Options.viewmodel_fov, 68, 120);
         //ImGui::PopItemWidth();
 
         ImGui::Columns(1, nullptr, false);
@@ -289,28 +289,24 @@ void RenderEmptyTab()
 
     ImGui::Checkbox("Lagcomp", g_Options.misc_backtrack);
     if (g_Options.misc_backtrack)
-    ImGui::SliderInt("", g_Options.misc_backtrack_slider, 0, 12);
+        ImGui::SliderInt("", g_Options.misc_backtrack_slider, 0, 12);
+    ImGui::Checkbox("Fakelag", g_Options.misc_fakelag);
+    if (g_Options.misc_fakelag)
+        ImGui::SliderInt(" ", g_Options.misc_fakelagammount, 0, 14);
     ImGui::Checkbox("Grenade Preview", g_Options.misc_grenadepreview);
     ImGui::Checkbox("Bunny Hop", g_Options.misc_bhop);
-    ImGui::Checkbox("Night Mode", g_Options.misc_nightmode); 
-    if (g_Options.misc_nightmode)
-    {
-        ImGui::SliderFloat("Brightness", g_Options.misc_nightmode_slider, 0, 1);
-        ImGui::SliderFloat("Prop: Red", g_Options.misc_nightmode_prop_r, 0, 1);
-        ImGui::SliderFloat("Prop: Green", g_Options.misc_nightmode_prop_g, 0, 1);
-        ImGui::SliderFloat("Prop: Blue", g_Options.misc_nightmode_prop_b, 0, 1);
-        ImGui::SliderFloat("Prop: Alpha", g_Options.misc_nightmode_prop_alpha, 0, 1);
-    }      
+    ImGui::Checkbox("Night Mode", g_Options.misc_nightmode);   
     ImGui::Checkbox("Force Crosshair", g_Options.esp_crosshair);
     ImGui::Checkbox("Boxes", g_Options.esp_player_boxes);
     ImGui::Checkbox("Names", g_Options.esp_player_names);
     ImGui::Checkbox("Chams", g_Options.chams_player_enabled);
     ImGui::Checkbox("Ignore-Z", g_Options.chams_player_ignorez); 
-    ImGui::SliderInt("Viewmodel", g_Options.viewmodel_fov, 68, 120);
+    ImGui::Checkbox("Viewmodel", g_Options.viewmodel_fov);
     ImGui::Checkbox("Third Person", g_Options.misc_thirdperson);
     ImGui::Checkbox("Remove Scope", g_Options.misc_removezoom);
-    ImGui::Checkbox("Bullet Beams", g_Options.misc_bulletbeams);
-
+    ImGui::Checkbox("Bullet Beams", g_Options.misc_bulletbeams); 
+    ImGui::Checkbox("Hit Marker", g_Options.misc_hitmarker);
+    //ImGui::Checkbox("Spectator List", g_Options.misc_spectator);
 
 
 
@@ -378,7 +374,7 @@ void Menu::Render()
     static int active_sidebar_tab = 0;
 
     ImGui::SetNextWindowPos(ImVec2{ 0, 0 }, ImGuiSetCond_Once);
-    ImGui::SetNextWindowSize(ImVec2{ 300, 400 }, ImGuiSetCond_Once);
+    ImGui::SetNextWindowSize(ImVec2{ 360, 380 }, ImGuiSetCond_Once);
 
 	if (ImGui::Begin(" ",
 		&_visible,

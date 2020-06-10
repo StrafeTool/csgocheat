@@ -12,6 +12,8 @@
 #include "features/visuals.hpp"
 #include "features/glow.hpp"
 #include "bulletbeams.hpp"
+#include "hitmarker.hpp"
+#include "features/antiaim.hpp"
 #pragma intrinsic(_ReturnAddress)  
 
 namespace Hooks {
@@ -66,7 +68,12 @@ namespace Hooks {
 		static auto crosshair_cvar = g_CVar->FindVar("crosshair");
 
 		viewmodel_fov->m_fnChangeCallbacks.m_Size = 0;
-		viewmodel_fov->SetValue(g_Options.viewmodel_fov);
+		if (g_Options.viewmodel_fov)
+			viewmodel_fov->SetValue(90);
+		else
+			viewmodel_fov->SetValue(68);
+
+		
 		
 		DWORD colorwrite, srgbwrite;
 		IDirect3DVertexDeclaration9* vert_dec = nullptr;
@@ -145,6 +152,23 @@ namespace Hooks {
 
 		TimeWarp::Get().CreateMove(cmd);
 
+		if (g_Options.misc_fakelag)
+			antiaim::Get().createmove(cmd, bSendPacket);
+
+		if (g_Options.misc_lefthand_knife) {
+
+			if (!g_EngineClient->IsConnected() || !g_EngineClient->IsInGame())
+				return;
+
+			if (g_LocalPlayer->m_hActiveWeapon()->IsKnife())
+			{
+				g_EngineClient->ClientCmd_Unrestricted("cl_righthand 1");
+			}
+			else
+			{
+				g_EngineClient->ClientCmd_Unrestricted("cl_righthand 0");
+			}
+		}
 
 		if (g_Options.misc_bhop)
 		{
@@ -229,6 +253,12 @@ namespace Hooks {
 
 			Render::Get().BeginScene();
 		}
+
+		//if (g_Options.misc_hitmarker)
+		//{
+		//	HitMarkerEvent::Get().Paint();
+		//}
+
 	}
 	//--------------------------------------------------------------------------------
 	void __fastcall hkEmitSound1(void* _this, int edx, IRecipientFilter& filter, int iEntIndex, int iChannel, const char* pSoundEntry, unsigned int nSoundEntryHash, const char *pSample, float flVolume, int nSeed, float flAttenuation, int iFlags, int iPitch, const Vector* pOrigin, const Vector* pDirection, void* pUtlVecOrigins, bool bUpdatePositions, float soundtime, int speakerentity, int unk) {

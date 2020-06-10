@@ -10,6 +10,7 @@
 #include "options.hpp"
 #include "render.hpp"
 #include "bulletbeams.hpp"
+#include "hitmarker.hpp"
 
 DWORD WINAPI OnDllAttach(LPVOID base)
 {
@@ -26,6 +27,7 @@ DWORD WINAPI OnDllAttach(LPVOID base)
         Interfaces::Initialize();
         Interfaces::Dump();
 
+        HitMarkerEvent::Get().RegisterSelf();
         BulletBeamsEvent::Get().RegisterSelf();
         NetvarSys::Get().Initialize();
         InputSys::Get().Initialize();
@@ -78,6 +80,7 @@ BOOL WINAPI OnDllDetach()
 #ifdef _DEBUG
     Utils::DetachConsole();
 #endif
+    HitMarkerEvent::Get().UnregisterSelf();
     BulletBeamsEvent::Get().UnregisterSelf();
     Hooks::Shutdown();
 

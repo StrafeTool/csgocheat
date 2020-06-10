@@ -6,6 +6,7 @@
 #include "../helpers/math.hpp"
 #include "../helpers/utils.hpp"
 
+vgui::HFont esp_font;
 
 RECT GetBBox(C_BaseEntity* ent)
 {
@@ -107,6 +108,14 @@ bool Visuals::Player::Begin(C_BasePlayer* pl)
 	ctx.bbox.right = static_cast<long>(ctx.bbox.left + w);
 	ctx.bbox.bottom = static_cast<long>(ctx.feet_pos.y);
 	ctx.bbox.top = static_cast<long>(ctx.head_pos.y);
+
+	return true;
+}
+//--------------------------------------------------------------------------------
+bool Visuals::CreateFonts()
+{
+	esp_font = g_VGuiSurface->CreateFont_();
+	g_VGuiSurface->SetFontGlyphSet(esp_font, "Tahoma", 13, 350, 0, 0, FONTFLAG_OUTLINE, FONTFLAG_ANTIALIAS);
 
 	return true;
 }
@@ -351,13 +360,12 @@ void Visuals::NightMode()
 				if (strstr(group, TEXTURE_GROUP_WORLD))
 				{
 					pMaterial->GetColorModulation(&r, &g, &b);
-					pMaterial->ColorModulate(g_Options.misc_nightmode_slider, g_Options.misc_nightmode_slider, g_Options.misc_nightmode_slider);
+					pMaterial->ColorModulate(0.2f, 0.2f, 0.2f);
 				}
 				if (strstr(group, "StaticProp"))
 				{
 					pMaterial->GetColorModulation(&r, &g, &b);
-					pMaterial->ColorModulate(g_Options.misc_nightmode_prop_r, g_Options.misc_nightmode_prop_g,g_Options.misc_nightmode_prop_b);
-					pMaterial->AlphaModulate(g_Options.misc_nightmode_prop_alpha);
+					pMaterial->ColorModulate(0.6f, 0.6f, 0.6f);
 				}
 				if (strstr(name, "models/props/de_dust/palace_bigdome"))
 				{
@@ -366,7 +374,7 @@ void Visuals::NightMode()
 				if (strstr(name, "models/props/de_dust/palace_pillars"))
 				{
 					pMaterial->GetColorModulation(&r, &g, &b);
-					pMaterial->ColorModulate(g_Options.misc_nightmode_slider, g_Options.misc_nightmode_slider,g_Options.misc_nightmode_slider);
+					pMaterial->ColorModulate(0.2f, 0.2f, 0.2f);
 				}
 
 				if (strstr(group, TEXTURE_GROUP_PARTICLE))
@@ -623,4 +631,121 @@ void Visuals::AddToDrawList() {
 
 	if (g_Options.esp_crosshair)
 		RenderCrosshair();
+}
+
+enum FontRenderFlag_t
+{
+	FONT_LEFT = 0,
+	FONT_RIGHT = 1,
+	FONT_CENTER = 2
+};
+
+void Visuals::DrawString(unsigned long font, int x, int y, Color color, unsigned long alignment, const char* msg, ...)
+{
+
+	va_list va_alist;
+	char buf[1024];
+	va_start(va_alist, msg);
+	_vsnprintf(buf, sizeof(buf), msg, va_alist);
+	va_end(va_alist);
+	wchar_t wbuf[1024];
+	MultiByteToWideChar(CP_UTF8, 0, buf, 256, wbuf, 256);
+
+	int r = 255, g = 255, b = 255, a = 255;
+	color.GetColor(r, g, b, a);
+
+	int width, height;
+	g_VGuiSurface->GetTextSize(font, wbuf, width, height);
+
+	if (alignment & FONT_RIGHT)
+		x -= width;
+	if (alignment & FONT_CENTER)
+		x -= width / 2;
+
+	g_VGuiSurface->DrawSetTextFont(font);
+	g_VGuiSurface->DrawSetTextColor(r, g, b, a);
+	g_VGuiSurface->DrawSetTextPos(x, y - height / 2);
+	g_VGuiSurface->DrawPrintText(wbuf, wcslen(wbuf));
+}
+
+void SpecListStyle()
+{
+	ImVec4* colorss = ImGui::GetStyle().Colors;
+	colorss[ImGuiCol_WindowBg].w = 1;
+	colorss[ImGuiCol_TitleBg] = ImColor(21, 21, 21, 255);
+	colorss[ImGuiCol_TitleBgCollapsed] = ImColor(21, 21, 21, 255);
+	colorss[ImGuiCol_TitleBgActive] = ImColor(21, 21, 21, 255);
+
+}
+
+void Visuals::Spectators() {
+	if (g_Options.misc_spectator)
+	{
+		int cnt = 0;
+		for (int i = 1; i <= g_EntityList->GetHighestEntityIndex(); i++)
+		{
+
+			C_BasePlayer* player = C_BasePlayer::GetPlayerByIndex(i);
+
+			if (!player || player == nullptr)
+				continue;
+
+			player_info_t player_info;
+			if (player != g_LocalPlayer)
+			{
+				if (g_EngineClient->GetPlayerInfo(i, &player_info) && !player->IsAlive() && !player->IsDormant())
+				{
+					auto observer_target = player->m_hObserverTarget();
+					if (!observer_target)
+						continue;
+
+					auto target = observer_target.Get();
+					if (!target)
+						continue;
+
+					SpecListStyle();
+
+					player_info_t player_info2;
+					if (g_EngineClient->GetPlayerInfo(target->EntIndex(), &player_info2))
+					{
+						char player_name[255] = { 0 };
+						sprintf_s(player_name, "%s -> %s", player_info.szName, player_info2.szName);
+
+
+						ImGui::SetNextWindowSize(ImVec2(300, 160));
+						ImGui::Begin("Spectator List", g_Options.misc_spectator, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+						{
+							ImVec2 siz = ImGui::CalcTextSize(player_name);
+
+
+							if (target->EntIndex() == g_LocalPlayer->EntIndex())
+							{
+								ImGui::TextColored(ImVec4(1.00f, 0.00f, 0.23f, 1.f), player_name);
+							}
+							else
+							{
+								ImGui::Text(player_name);
+							}
+
+						}ImGui::End();
+
+					}
+					int w, h;
+					++cnt;
+				}
+			}
+			else
+			{
+
+				ImGui::SetNextWindowSize(ImVec2(300, 160));
+				ImGui::Begin("Spectator List", g_Options.misc_spectator, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+				{
+
+
+				}ImGui::End();
+
+			}
+
+		}
+	}
 }

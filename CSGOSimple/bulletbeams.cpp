@@ -51,7 +51,7 @@ void BulletBeamsEvent::Paint(void)
 	if (impacts.empty())
 		return;
 
-	Color current_color(25, 25, 255);
+	Color current_color(0, 255, 255);
 
 	for (size_t i = 0; i < impacts.size(); i++)
 	{

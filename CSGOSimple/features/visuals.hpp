@@ -7,7 +7,7 @@
 #include "../valve_sdk/csgostructs.hpp"
 
 
-
+extern unsigned long esp_font;
 
 class Visuals : public Singleton<Visuals>
 {
@@ -54,5 +54,7 @@ public:
 	
 public:
 	void AddToDrawList();
+	void DrawString(unsigned long font, int x, int y, Color color, unsigned long alignment, const char* msg, ...);
+	bool CreateFonts();
 	void Render();
 };

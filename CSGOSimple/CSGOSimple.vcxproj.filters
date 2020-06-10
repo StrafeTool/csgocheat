@@ -131,6 +131,12 @@
     <ClCompile Include="bulletbeams.cpp">
       <Filter>Source Files\features</Filter>
     </ClCompile>
+    <ClCompile Include="hitmarker.cpp">
+      <Filter>Source Files\features</Filter>
+    </ClCompile>
+    <ClCompile Include="features\antiaim.cpp">
+      <Filter>Source Files\features</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="valve_sdk\misc\BaseHandle.hpp">
@@ -405,6 +411,12 @@
     </ClInclude>
     <ClInclude Include="IViewRenderBeams.hpp">
       <Filter>Header Files\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="hitmarker.hpp">
+      <Filter>Header Files\features</Filter>
+    </ClInclude>
+    <ClInclude Include="features\antiaim.hpp">
+      <Filter>Header Files\features</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
