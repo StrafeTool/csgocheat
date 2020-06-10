@@ -77,12 +77,13 @@ public:
 		//
 		OPTION(bool, misc_grenadepreview, true);
 		OPTION(bool, misc_nightmode, true);
-
-		OPTION(float, misc_nightmode_slider, 0.4f);
-		
+		OPTION(float, misc_nightmode_slider, 1.f);	
+		OPTION(float, misc_nightmode_prop_r, 1.f);
+		OPTION(float, misc_nightmode_prop_g, 1.f);
+		OPTION(float, misc_nightmode_prop_b, 1.f);
+		OPTION(float, misc_nightmode_prop_alpha, 1.f);
 		OPTION(bool, misc_backtrack, true);
 		OPTION(int, misc_backtrack_slider, 12);
-
 		OPTION(bool, misc_removezoom, false);
 		OPTION(bool, misc_bhop, true);
 		OPTION(bool, misc_autostrafe, true);

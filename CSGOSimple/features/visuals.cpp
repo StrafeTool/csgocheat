@@ -315,6 +315,9 @@ void Visuals::NightMode()
 	static float g;
 	static float b;
 
+	if (!g_EngineClient->IsInGame() || !g_EngineClient->IsConnected())
+		done = false;
+
 	if (g_Options.misc_nightmode)
 	{
 		if (!done)
@@ -347,11 +350,14 @@ void Visuals::NightMode()
 				}				
 				if (strstr(group, TEXTURE_GROUP_WORLD))
 				{
+					pMaterial->GetColorModulation(&r, &g, &b);
 					pMaterial->ColorModulate(g_Options.misc_nightmode_slider, g_Options.misc_nightmode_slider, g_Options.misc_nightmode_slider);
 				}
 				if (strstr(group, "StaticProp"))
 				{
-					pMaterial->ColorModulate(1, 1, 1);
+					pMaterial->GetColorModulation(&r, &g, &b);
+					pMaterial->ColorModulate(g_Options.misc_nightmode_prop_r, g_Options.misc_nightmode_prop_g,g_Options.misc_nightmode_prop_b);
+					pMaterial->AlphaModulate(g_Options.misc_nightmode_prop_alpha);
 				}
 				if (strstr(name, "models/props/de_dust/palace_bigdome"))
 				{
@@ -359,7 +365,8 @@ void Visuals::NightMode()
 				}
 				if (strstr(name, "models/props/de_dust/palace_pillars"))
 				{
-					pMaterial->ColorModulate(1, 1, 1);
+					pMaterial->GetColorModulation(&r, &g, &b);
+					pMaterial->ColorModulate(g_Options.misc_nightmode_slider, g_Options.misc_nightmode_slider,g_Options.misc_nightmode_slider);
 				}
 
 				if (strstr(group, TEXTURE_GROUP_PARTICLE))
