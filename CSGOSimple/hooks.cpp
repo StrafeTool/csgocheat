@@ -200,7 +200,7 @@ namespace Hooks {
 
 		if (g_Options.misc_removezoom)
 		{
-			if ( g_LocalPlayer && !g_LocalPlayer->IsAlive())
+			if (!g_LocalPlayer && g_LocalPlayer->IsAlive())
 				return;
 
 			if (strstr(g_VGuiPanel->GetName(panel), "HudZoom")) {
