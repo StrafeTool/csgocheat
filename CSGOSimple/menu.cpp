@@ -295,7 +295,7 @@ void RenderEmptyTab()
     ImGui::Checkbox("Night Mode", g_Options.misc_nightmode); 
     if (g_Options.misc_nightmode)
     {
-        ImGui::SliderFloat(" ", g_Options.misc_nightmode_slider, 0, 1);
+        ImGui::SliderFloat("Brightness", g_Options.misc_nightmode_slider, 0, 1);
         ImGui::SliderFloat("Prop: Red", g_Options.misc_nightmode_prop_r, 0, 1);
         ImGui::SliderFloat("Prop: Green", g_Options.misc_nightmode_prop_g, 0, 1);
         ImGui::SliderFloat("Prop: Blue", g_Options.misc_nightmode_prop_b, 0, 1);
@@ -306,9 +306,9 @@ void RenderEmptyTab()
     ImGui::Checkbox("Names", g_Options.esp_player_names);
     ImGui::Checkbox("Chams", g_Options.chams_player_enabled);
     ImGui::Checkbox("Ignore-Z", g_Options.chams_player_ignorez); 
-    ImGui::SliderInt("viewmodel_fov:", g_Options.viewmodel_fov, 68, 120);
+    ImGui::SliderInt("Viewmodel", g_Options.viewmodel_fov, 68, 120);
     ImGui::Checkbox("Third Person", g_Options.misc_thirdperson);
-    ImGui::Checkbox("Remove zoom", g_Options.misc_removezoom);
+    ImGui::Checkbox("Remove Scope", g_Options.misc_removezoom);
 
 
 
