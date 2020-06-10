@@ -36,10 +36,10 @@ public:
 
 		//legit
 		OPTION(bool, legit_enable, true);
-		OPTION(float, legit_fov, 10.f);
+		OPTION(float, legit_fov, 5.f);
 		OPTION(int, legit_hitbox, 0);
 		OPTION(int, LegitAimbotRcs, 100);//LegitAimbotSmooth
-		OPTION(int, LegitAimbotSmooth, 5);
+		OPTION(int, LegitAimbotSmooth, 10);
 		OPTION(bool, legit_autofire, 0);
 		// 
 		// ESP

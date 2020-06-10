@@ -274,6 +274,37 @@ float Hitchance2(C_BaseCombatWeapon* Weapon)
 	}
 	return Hitchance;
 }
+
+void RageAimbot::Autostop(CUserCmd* cmd)
+{
+	
+
+	//cmd->viewangles.clamp();
+
+	auto vel2 = g_LocalPlayer->m_vecVelocity();
+	const auto speed = vel2.Length();
+	if (speed > 15.f)
+	{
+		Vector dir;
+		//Math::VectorAngles(vel2, &dir);
+		dir.y = cmd->viewangles.yaw - dir.y;
+
+		Vector new_move;
+		//Math::AngleVectors(dir, &new_move);
+		const auto max = std::max(std::fabs(cmd->forwardmove), std::fabs(cmd->sidemove));
+		const auto mult = 450.f / max;
+		new_move *= -mult;
+
+		cmd->forwardmove = new_move.x;
+		cmd->sidemove = new_move.y;
+	}
+	else
+	{
+		cmd->forwardmove = 0.f;
+		cmd->sidemove = 0.f;
+	}
+}
+
 void RageAimbot::Do(CUserCmd* cmd, C_BaseCombatWeapon* Weapon, bool& bSendPacket)
 {
 	if (!g_EngineClient->IsConnected() && g_EngineClient->IsInGame())
@@ -330,12 +361,16 @@ void RageAimbot::Do(CUserCmd* cmd, C_BaseCombatWeapon* Weapon, bool& bSendPacket
 	{
 		C_BasePlayer* Target = C_BasePlayer::GetPlayerByIndex(BestTargetIndex);
 		if (!Target) return;
+
+	
 		QAngle AimAngle = Math::CalcAngle(g_LocalPlayer->GetEyePos(), Hitbox);
 		AimAngle -= g_LocalPlayer->m_aimPunchAngle() * g_CVar->FindVar("weapon_recoil_scale")->GetFloat();
 		Math::Normalize3(AimAngle);
 		Math::ClampAngles(AimAngle);
 
 		cmd->viewangles = AimAngle;
+
+
 
 		if (Hitchance(Weapon, cmd->viewangles, Target, float(g_Options.RageAimbotHitchance)) ||
 			Backtrack && g_Options.RageAimbotHitchance * 1.5 <= Hitchance2(Weapon) ||
@@ -347,6 +382,11 @@ void RageAimbot::Do(CUserCmd* cmd, C_BaseCombatWeapon* Weapon, bool& bSendPacket
 				cmd->tick_count = TIME_TO_TICKS(BestTargetSimtime + GetLerpTime());
 				cmd->buttons |= IN_ATTACK;
 			}
+		}
+		
+		else if (!(Hitchance(Weapon, cmd->viewangles, Target, float(g_Options.RageAimbotHitchance))  || g_Options.RageAimbotHitchance == 0 && g_LocalPlayer->m_vecVelocity().Length() >= .3f && !GetAsyncKeyState(VK_SPACE)))
+		{
+			Autostop(cmd);
 		}
 	}
 }

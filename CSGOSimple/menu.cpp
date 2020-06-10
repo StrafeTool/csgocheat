@@ -368,24 +368,86 @@ void Menu::OnDeviceReset()
 
 void Menu::Render()
 {
-	ImGui::GetIO().MouseDrawCursor = _visible;
+    ImGui::GetIO().MouseDrawCursor = _visible;
 
-    if(!_visible)
+    if (!_visible)
         return;
 
     const auto sidebar_size = get_sidebar_size();
     static int active_sidebar_tab = 0;
 
     ImGui::SetNextWindowPos(ImVec2{ 0, 0 }, ImGuiSetCond_Once);
-    ImGui::SetNextWindowSize(ImVec2{ 320, 500 }, ImGuiSetCond_Once);
+    ImGui::SetNextWindowSize(ImVec2{ 390, 400 }, ImGuiSetCond_Once);
 
-	if (ImGui::Begin(" ",
-		&_visible,
-		ImGuiWindowFlags_NoCollapse |
-		ImGuiWindowFlags_NoResize |
-		ImGuiWindowFlags_NoTitleBar)) {
+    if (ImGui::Begin(" ",
+        &_visible,
+        ImGuiWindowFlags_NoCollapse |
+        ImGuiWindowFlags_NoResize |
+        ImGuiWindowFlags_NoTitleBar)) {
         auto size = ImVec2{ 0.0f, sidebar_size.y };
-        RenderEmptyTab();
+        ImGui::BeginChild("aimbot", ImVec2(120, 380), true);
+        {
+            ImGui::Text("Legitbot");
+            ImGui::Checkbox("legitbot", g_Options.legit_enable);
+            if (g_Options.legit_enable)
+            {
+
+                ImGui::Checkbox("Lagcomp", g_Options.misc_triggerbot);
+                ImGui::Text("fov");
+                ImGui::SliderFloat("", g_Options.legit_fov, 0, 20);
+                ImGui::Text("smooth");
+                ImGui::SliderInt("   ", g_Options.LegitAimbotSmooth, 0, 100);
+                ImGui::Text("rcs");
+                ImGui::SliderInt("    ", g_Options.LegitAimbotRcs, 0, 100);
+
+            }
+            ImGui::Checkbox("ragebot", g_Options.rage_enable);
+            if (g_Options.rage_enable)
+            {
+                ImGui::SliderFloat("      ", g_Options.RageAimbotHitchance, 0, 100);
+                ImGui::SliderFloat("       ", g_Options.RageAimbotMinDmg, 0, 120);
+
+            }
+           
+
+
+
+
+        }ImGui::EndChild();
+        ImGui::SameLine();
+        ImGui::BeginChild("Visual", ImVec2(120, 380), true);
+        {
+            ImGui::Text("Visual");
+            ImGui::Checkbox("Chams", g_Options.chams_player_enabled);
+            if (g_Options.chams_player_enabled) {
+                ImGui::Checkbox("XQZ", g_Options.chams_player_ignorez);
+            }
+            ImGui::Checkbox("Glow", g_Options.glow_players);
+            ImGui::Checkbox("Boxes", g_Options.esp_player_boxes);
+            ImGui::Checkbox("Nightmode", g_Options.misc_nightmode);
+            ImGui::Checkbox("Scope", g_Options.misc_removezoom);
+            ImGui::Checkbox("Beams", g_Options.misc_bulletbeams);
+            ImGui::Checkbox("Hitmarker", g_Options.misc_hitmarker);
+
+        }ImGui::EndChild();
+
+        ImGui::SameLine();
+        ImGui::BeginChild("Misc", ImVec2(120, 380), true);
+        {
+            ImGui::Text("Misc");
+            ImGui::Checkbox("Bunny Hop", g_Options.misc_bhop);
+            ImGui::Checkbox("TPerson", g_Options.misc_thirdperson);
+            ImGui::Checkbox("NadePred", g_Options.misc_grenadepreview);
+            ImGui::Checkbox("Crosshair", g_Options.esp_crosshair);
+            ImGui::Checkbox("Fakelag", g_Options.misc_fakelag);
+            if (g_Options.misc_fakelag)
+                ImGui::SliderInt(" ", g_Options.misc_fakelagammount, 0, 14);
+            ImGui::Checkbox("VModel", g_Options.viewmodel_fov);
+
+        }ImGui::EndChild();
+
+        //RenderEmptyTab();
+
         ImGui::End();
     }
 }

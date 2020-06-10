@@ -51,6 +51,7 @@ public:
 	std::vector<TickInfo> BacktrackRecords[65];
 	void StartEnginePred(CUserCmd* cmd);
 	void EndEnginePred();
+	void Autostop(CUserCmd* cmd);
 	void Do(CUserCmd* cmd, C_BaseCombatWeapon* Weapon, bool& bSendPacket);
 	void DoAntiaim(CUserCmd* cmd, C_BaseCombatWeapon* Weapon, bool& bSendPacket);
 };

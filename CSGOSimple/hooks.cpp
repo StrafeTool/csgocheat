@@ -136,6 +136,34 @@ namespace Hooks {
 		return hr;
 	}
 	//--------------------------------------------------------------------------------
+	CMoveData bMoveData[0x200];
+	void Prediction(CUserCmd* pCmd, C_BasePlayer* LocalPlayer)
+	{
+		if (g_MoveHelper && LocalPlayer->IsAlive())
+		{
+			float curtime = g_GlobalVars->curtime;
+			float frametime = g_GlobalVars->frametime;
+			int iFlags = LocalPlayer->m_fFlags();
+
+			g_GlobalVars->curtime = (float)LocalPlayer->m_nTickBase() * g_GlobalVars->interval_per_tick;
+			g_GlobalVars->frametime = g_GlobalVars->interval_per_tick;
+
+			g_MoveHelper->SetHost(LocalPlayer);
+
+			g_Prediction->SetupMove(LocalPlayer, pCmd, nullptr, bMoveData);
+			g_GameMovement->ProcessMovement(LocalPlayer, bMoveData);
+			g_Prediction->FinishMove(LocalPlayer, pCmd, bMoveData);
+
+			g_MoveHelper->SetHost(0);
+
+			g_GlobalVars->curtime = curtime;
+			g_GlobalVars->frametime = frametime;
+			LocalPlayer->m_fFlags() = iFlags;
+		}
+	}
+
+
+	C_BasePlayer* pLocal2;
 	void __stdcall hkCreateMove(int sequence_number, float input_sample_frametime, bool active, bool& bSendPacket)
 	{
 		static auto oCreateMove = hlclient_hook.get_original<decltype(&hkCreateMove_Proxy)>(index::CreateMove);
@@ -153,38 +181,37 @@ namespace Hooks {
 		if (Menu::Get().IsVisible())
 			cmd->buttons &= ~IN_ATTACK;
 
-
 		if (g_Options.misc_bhop)
 		{
 			BunnyHop::OnCreateMove(cmd);
 			BunnyHop::AutoStrafe(cmd);
 		}
 
-
 		MovementFix::Get().Start(cmd);
 		RageAimbot::Get().StartEnginePred(cmd);
-
-		
-		TimeWarp::Get().CreateMove(cmd);
-
-	
+		pLocal2 = static_cast<C_BasePlayer*>(g_EntityList->GetClientEntity(g_EngineClient->GetLocalPlayer()));
+	//	TimeWarp::Get().CreateMove(cmd);
 		if (g_Options.rage_enable)
 		{
-		/*	Variables.LegitAimbotEnabled = false;
-			Variables.LegitBacktrackEnabled = false;*/
+			Prediction(cmd, pLocal2);
+			g_Options.legit_enable == false;
+			g_Options.misc_triggerbot == false;
 			RageAimbot::Get().StoreRecords();
 			RageAimbot::Get().Do(cmd, Weapon, bSendPacket);
-		/*	if (Variables.RageAntiaimEnabled)
-				RageAimbot::Get().DoAntiaim(cmd, Weapon, bSendPacket);*/
-		}
-		else
-		{
-			if (g_Options.misc_triggerbot)
-				LegitBacktrack::Get().Do(cmd);
 
-			if (g_Options.legit_enable)
-				LegitAimbot::Get().Do(cmd, Weapon);
+
 		}
+		else if (g_Options.legit_enable)
+		{
+
+			g_Options.rage_enable == false;
+		//	g_Options.misc_triggerbot == false;
+			LegitBacktrack::Get().Do(cmd);
+			LegitAimbot::Get().Do(cmd, Weapon);
+
+		}
+
+
 
 		/*if (g_Options.misc_triggerbot)
 			triggerbot::Triggerbot(cmd);*/
