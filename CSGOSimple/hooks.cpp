@@ -11,6 +11,7 @@
 #include "features/chams.hpp"
 #include "features/visuals.hpp"
 #include "features/glow.hpp"
+#include "bulletbeams.hpp"
 #pragma intrinsic(_ReturnAddress)  
 
 namespace Hooks {
@@ -260,6 +261,8 @@ namespace Hooks {
 	int __fastcall hkDoPostScreenEffects(void* _this, int edx, int a1)
 	{
 		static auto oDoPostScreenEffects = clientmode_hook.get_original<decltype(&hkDoPostScreenEffects)>(index::DoPostScreenSpaceEffects);
+
+		BulletBeamsEvent::Get().Paint();
 
 		if (g_LocalPlayer && g_Options.glow_enabled)
 			Glow::Get().Run();

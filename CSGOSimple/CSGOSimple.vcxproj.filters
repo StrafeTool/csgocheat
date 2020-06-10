@@ -128,6 +128,9 @@
     <ClCompile Include="backtrack.cpp">
       <Filter>Source Files\features</Filter>
     </ClCompile>
+    <ClCompile Include="bulletbeams.cpp">
+      <Filter>Source Files\features</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="valve_sdk\misc\BaseHandle.hpp">
@@ -396,6 +399,12 @@
     </ClInclude>
     <ClInclude Include="backtrack.hpp">
       <Filter>Header Files\features</Filter>
+    </ClInclude>
+    <ClInclude Include="bulletbeams.hpp">
+      <Filter>Header Files\features</Filter>
+    </ClInclude>
+    <ClInclude Include="IViewRenderBeams.hpp">
+      <Filter>Header Files\SDK</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

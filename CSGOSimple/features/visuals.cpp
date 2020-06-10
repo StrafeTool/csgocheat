@@ -590,15 +590,6 @@ void Visuals::ThirdPerson() {
 	}
 }
 
-
-
-
-
-	
-	
-
-
-
 void Visuals::AddToDrawList() {
 	for (auto i = 1; i <= g_EntityList->GetHighestEntityIndex(); ++i) {
 		auto entity = C_BaseEntity::GetEntityByIndex(i);
@@ -612,11 +603,6 @@ void Visuals::AddToDrawList() {
 		if (i <= g_GlobalVars->maxClients) {
 			auto player = Player();
 			if (player.Begin((C_BasePlayer*)entity)) {
-
-
-			
-
-
 				if (g_Options.esp_player_snaplines) player.RenderSnapline();
 				if (g_Options.esp_player_boxes)     player.RenderBox();
 				if (g_Options.esp_player_weapons)   player.RenderWeaponName();
@@ -635,8 +621,6 @@ void Visuals::AddToDrawList() {
 			RenderItemEsp(entity);
 	}
 
-
 	if (g_Options.esp_crosshair)
 		RenderCrosshair();
-
 }

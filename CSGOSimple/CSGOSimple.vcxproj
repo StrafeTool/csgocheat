@@ -98,6 +98,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="backtrack.cpp" />
+    <ClCompile Include="bulletbeams.cpp" />
     <ClCompile Include="features\bhop.cpp" />
     <ClCompile Include="features\chams.cpp" />
     <ClCompile Include="features\glow.cpp" />
@@ -132,11 +133,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="backtrack.hpp" />
+    <ClInclude Include="bulletbeams.hpp" />
     <ClInclude Include="config.hpp" />
     <ClInclude Include="fonts\cousine.hpp" />
     <ClInclude Include="fonts\fonts.hpp" />
     <ClInclude Include="imgui\impl\imgui_impl_dx9.h" />
     <ClInclude Include="imgui\impl\imgui_impl_win32.h" />
+    <ClInclude Include="IViewRenderBeams.hpp" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="valve_sdk\Misc\datamap.hpp" />
     <ClInclude Include="fonts\droid.hpp" />

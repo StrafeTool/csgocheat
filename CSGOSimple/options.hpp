@@ -42,13 +42,13 @@ public:
 		OPTION(bool, esp_crosshair, true);
 		OPTION(bool, esp_dropped_weapons, false);
 		OPTION(bool, esp_defuse_kit, false);
-		OPTION(bool, esp_planted_c4, false);
+		OPTION(bool, esp_planted_c4, true);
 		OPTION(bool, esp_items, false);
 
 		// 
 		// GLOW
 		// 
-		OPTION(bool, glow_enabled, false);
+		OPTION(bool, glow_enabled, true);
 		OPTION(bool, glow_enemies_only, false);
 		OPTION(bool, glow_players, false);
 		OPTION(bool, glow_chickens, false);
@@ -75,6 +75,7 @@ public:
 		//
 		// MISC
 		//
+		OPTION(bool, misc_bulletbeams, false);
 		OPTION(bool, misc_grenadepreview, true);
 		OPTION(bool, misc_nightmode, true);
 		OPTION(float, misc_nightmode_slider, 1.f);	

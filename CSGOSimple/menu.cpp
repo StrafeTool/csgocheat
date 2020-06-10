@@ -286,7 +286,7 @@ void RenderEmptyTab()
 
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
 	ImGui::PopStyleVar();
-	
+
     ImGui::Checkbox("Lagcomp", g_Options.misc_backtrack);
     if (g_Options.misc_backtrack)
     ImGui::SliderInt("", g_Options.misc_backtrack_slider, 0, 12);
@@ -309,6 +309,7 @@ void RenderEmptyTab()
     ImGui::SliderInt("Viewmodel", g_Options.viewmodel_fov, 68, 120);
     ImGui::Checkbox("Third Person", g_Options.misc_thirdperson);
     ImGui::Checkbox("Remove Scope", g_Options.misc_removezoom);
+    ImGui::Checkbox("Bullet Beams", g_Options.misc_bulletbeams);
 
 
 

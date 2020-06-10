@@ -9,6 +9,7 @@
 #include "menu.hpp"
 #include "options.hpp"
 #include "render.hpp"
+#include "bulletbeams.hpp"
 
 DWORD WINAPI OnDllAttach(LPVOID base)
 {
@@ -25,6 +26,7 @@ DWORD WINAPI OnDllAttach(LPVOID base)
         Interfaces::Initialize();
         Interfaces::Dump();
 
+        BulletBeamsEvent::Get().RegisterSelf();
         NetvarSys::Get().Initialize();
         InputSys::Get().Initialize();
 		Render::Get().Initialize();
@@ -76,7 +78,7 @@ BOOL WINAPI OnDllDetach()
 #ifdef _DEBUG
     Utils::DetachConsole();
 #endif
-
+    BulletBeamsEvent::Get().UnregisterSelf();
     Hooks::Shutdown();
 
     Menu::Get().Shutdown();
