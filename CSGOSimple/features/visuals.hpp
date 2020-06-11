@@ -18,6 +18,7 @@ private:
 
 public:
 	vgui::HFont VerdanaBold12;
+	vgui::HFont icon;
 	void CreateFonts();
 	void Text(int X, int Y, const char* Text, vgui::HFont Font, Color DrawColor, bool Center);
 	void TextSize(int& Width, int& Height, const char* Text, vgui::HFont Font);

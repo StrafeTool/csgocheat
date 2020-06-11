@@ -11,9 +11,10 @@ vgui::HFont esp_font;
 void Renders::CreateFonts()
 {
 	VerdanaBold12 = g_VGuiSurface->CreateFont_();
+	icon = g_VGuiSurface->CreateFont_();
 
-	g_VGuiSurface->SetFontGlyphSet(VerdanaBold12, "Tahoma Bold", 12, 400, 0, 0, FONTFLAG_DROPSHADOW);
-	//g_VGuiSurface->SetFontGlyphSet(FuckMyAss, "Counter-Strike", 18, 500, 0, 0, FONTFLAG_ANTIALIAS);
+	g_VGuiSurface->SetFontGlyphSet(VerdanaBold12, "Tahoma Bold", 14, 400, 0, 0, FONTFLAG_DROPSHADOW);
+	g_VGuiSurface->SetFontGlyphSet(icon, "Counter-Strike", 18, 500, 0, 0, FONTFLAG_ANTIALIAS);
 }
 void Renders::TextSize(int& Width, int& Height, const char* Text, vgui::HFont Font)
 {
@@ -164,20 +165,41 @@ bool Visuals::CreateFonts()
 	return true;
 }
 //--------------------------------------------------------------------------------
+
+
+
 void Visuals::Player::RenderBox() {
+
+
 	Renders::Get().OutlinedRectange(ctx.bbox.left - 1, ctx.bbox.top - 1, ctx.bbox.right + 1, ctx.bbox.bottom + 1, Color(0, 0, 0, 150));
 	Renders::Get().OutlinedRectange(ctx.bbox.left + 1, ctx.bbox.top + 1, ctx.bbox.right - 1, ctx.bbox.bottom - 1, Color(0, 0, 0, 150));
 	Renders::Get().OutlinedRectange(ctx.bbox.left, ctx.bbox.top, ctx.bbox.right, ctx.bbox.bottom, Color(255, 255, 255, 255));
+
+
+
+
+
+
+	//Renders::Get().OutlinedRectange(ctx.bbox.left - 1, ctx.bbox.top - 1, ctx.bbox.right + 1, ctx.bbox.bottom + 1, Color(0, 0, 0, 150));
+	//Renders::Get().OutlinedRectange(ctx.bbox.left + 1, ctx.bbox.top + 1, ctx.bbox.right - 1, ctx.bbox.bottom - 1, Color(0, 0, 0, 150));
+	//Renders::Get().OutlinedRectange(ctx.bbox.left, ctx.bbox.top, ctx.bbox.right, ctx.bbox.bottom, Color(255, 255, 255, 255));
 
 }
 //--------------------------------------------------------------------------------
 void Visuals::Player::RenderName()
 {
-	player_info_t info = ctx.pl->GetPlayerInfo();
+	player_info_t PlayerInfo;
+	g_EngineClient->GetPlayerInfo(ctx.pl->EntIndex(), &PlayerInfo);
+
+	int TextWidth, TextHeight;
+	Renders::Get().TextSize(TextWidth, TextHeight, PlayerInfo.szName, Renders::Get().VerdanaBold12);
+	Renders::Get().Text(ctx.bbox.left + (ctx.bbox.right - ctx.bbox.left) / 2, ctx.bbox.top - TextHeight, PlayerInfo.szName, Renders::Get().VerdanaBold12, Color(255, 255, 255, 255), true);
+
+	/*player_info_t info = ctx.pl->GetPlayerInfo();
 
 	auto sz = g_namefont->CalcTextSizeA(14.f, FLT_MAX, 0.0f, info.szName);
-
-	Render::Get().RenderText(info.szName, ctx.feet_pos.x - sz.x / 2, ctx.head_pos.y - sz.y, 12.f,  ctx.clr);
+	
+	Render::Get().RenderText(info.szName, ctx.feet_pos.x - sz.x / 2, ctx.head_pos.y - sz.y, false, ctx.clr);*/
 }
 //--------------------------------------------------------------------------------
 void Visuals::Player::RenderHealth()
@@ -211,7 +233,7 @@ void Visuals::Player::RenderHealth()
 	auto name = (health < 0.f) ? "%d" : hp;
 	auto sz = g_namefont->CalcTextSizeA(14.f, FLT_MAX, 0.0f, name.c_str());
 	if (health != 100)
-		Render::Get().RenderText(name, ImVec2(x - w, y + height), 14.f, Color(255, 255, 255, 255));
+		Render::Get().RenderText(name, ImVec2(x - w, y + height), false, Color(255, 255, 255, 255));
 }
 //--------------------------------------------------------------------------------
 void Visuals::Player::RenderArmour()
@@ -297,18 +319,38 @@ void Visuals::Player::renderammo()// ignore this just saved some stuff to it unl
 }
 
 //--------------------------------------------------------------------------------
+//void Visuals::Player::RenderWeaponName()
+//{
+//	auto weapon = ctx.pl->m_hActiveWeapon().Get();
+//
+//	if (!weapon) return;
+//	if (!weapon->GetCSWeaponData()) return;
+//
+//
+//	auto text = weapon->GetCSWeaponData()->szWeaponName + 7;
+//	auto sz = g_namefont->CalcTextSizeA(14.f, FLT_MAX, 0.0f, text);
+//	Render::Get().RenderText(text, ctx.feet_pos.x, ctx.feet_pos.y, 14.f, ctx.clr, true,
+//		g_namefont);
+//}
+
 void Visuals::Player::RenderWeaponName()
 {
-	auto weapon = ctx.pl->m_hActiveWeapon().Get();
+	C_BaseCombatWeapon* Weapon = ctx.pl->m_hActiveWeapon();
+	if (!Weapon && g_EngineClient->IsConnected() && g_EngineClient->IsInGame())
+		return;
+	if (!Weapon->GetCSWeaponData())
+		return;
 
-	if (!weapon) return;
-	if (!weapon->GetCSWeaponData()) return;
+	std::string WeaponName = std::string(Weapon->GetCSWeaponData()->szHudName + std::string("(") + std::to_string(Weapon->m_iClip1()) + std::string("/") + std::to_string(Weapon->m_iPrimaryReserveAmmoCount()) + std::string(")"));
+	WeaponName.erase(0, 13);
+	int TextWidth, TextHeight;
+	Renders::Get().TextSize(TextWidth, TextHeight, WeaponName.c_str(), Renders::Get().VerdanaBold12);
+	Renders::Get().Text(ctx.bbox.left + (ctx.bbox.right - ctx.bbox.left) / 2, ctx.bbox.bottom - 1, WeaponName.c_str(), Renders::Get().VerdanaBold12, Color(255, 255, 255, 255), true);
 
-	auto text = weapon->GetCSWeaponData()->szWeaponName + 7;
-	auto sz = g_namefont->CalcTextSizeA(14.f, FLT_MAX, 0.0f, text);
-	Render::Get().RenderText(text, ctx.feet_pos.x, ctx.feet_pos.y, 14.f, ctx.clr, true,
-		g_namefont);
+
 }
+
+
 //--------------------------------------------------------------------------------
 void Visuals::Player::RenderSnapline()
 {
@@ -473,7 +515,7 @@ void Visuals::NightMode()
 				const char* name = pMaterial->GetName();
 
 				if (strstr(pMaterial->GetTextureGroupName(), TEXTURE_GROUP_SKYBOX)) {
-					pMaterial->ColorModulate(0.f, 0.f, 1.f);
+					pMaterial->ColorModulate(1.f, 0.f, 0.f);
 				}				
 				if (strstr(group, TEXTURE_GROUP_WORLD))
 				{

@@ -108,7 +108,7 @@ public:
 		OPTION(int, misc_backtrack_slider, 12);
 		OPTION(bool, misc_removezoom, false);
 		OPTION(bool, misc_bhop, true);
-		OPTION(bool, misc_autoaccept, true);
+		OPTION(bool, misc_autoaccept, false);
 		OPTION(bool, misc_autostrafe, true);
 		OPTION(bool, misc_no_hands, false);
 		OPTION(bool, misc_thirdperson, false);

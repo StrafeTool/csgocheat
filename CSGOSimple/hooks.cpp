@@ -42,6 +42,8 @@ namespace Hooks {
 		clientmode_hook.hook_index(index::DoPostScreenSpaceEffects, hkDoPostScreenEffects);
 		clientmode_hook.hook_index(index::OverrideView, hkOverrideView);
 		sv_cheats.hook_index(index::SvCheatsGetBool, hkSvCheatsGetBool);
+
+		Renders::Get().CreateFonts();
 	}
 	//--------------------------------------------------------------------------------
 	void Shutdown()
@@ -131,7 +133,10 @@ namespace Hooks {
 		auto hr = oReset(device, pPresentationParameters);
 
 		if (hr >= 0)
+		{
 			Menu::Get().OnDeviceReset();
+			Renders::Get().CreateFonts();
+		}
 
 		return hr;
 	}
@@ -302,24 +307,24 @@ namespace Hooks {
 		static auto ofunc = sound_hook.get_original<decltype(&hkEmitSound1)>(index::EmitSound1);
 
 
-		if (g_Options.misc_autoaccept)
-		{
-			if (!strcmp(pSoundEntry, "UIPanorama.popup_accept_match_beep")) {
-				static auto fnAccept = (void(*)())(Utils::PatternScan(GetModuleHandleA("client.dll"), "55 8B EC 83 E4 F8 8B 4D 08 BA ? ? ? ? E8 ? ? ? ? 85 C0 75 12"));
+		//if (g_Options.misc_autoaccept)
+		//{
+		//	if (!strcmp(pSoundEntry, "UIPanorama.popup_accept_match_beep")) {
+		//		static auto fnAccept = (void(*)())(Utils::PatternScan(GetModuleHandleA("client.dll"), "55 8B EC 83 E4 F8 8B 4D 08 BA ? ? ? ? E8 ? ? ? ? 85 C0 75 12"));
 
-				fnAccept();
+		//		fnAccept();
 
-				//This will flash the CSGO window on the taskbar
-				//so we know a game was found (you cant hear the beep sometimes cause it auto-accepts too fast)
-				FLASHWINFO fi;
-				fi.cbSize = sizeof(FLASHWINFO);
-				fi.hwnd = InputSys::Get().GetMainWindow();
-				fi.dwFlags = FLASHW_ALL | FLASHW_TIMERNOFG;
-				fi.uCount = 0;
-				fi.dwTimeout = 0;
-				FlashWindowEx(&fi);
-			}
-		}
+		//		//This will flash the CSGO window on the taskbar
+		//		//so we know a game was found (you cant hear the beep sometimes cause it auto-accepts too fast)
+		//		FLASHWINFO fi;
+		//		fi.cbSize = sizeof(FLASHWINFO);
+		//		fi.hwnd = InputSys::Get().GetMainWindow();
+		//		fi.dwFlags = FLASHW_ALL | FLASHW_TIMERNOFG;
+		//		fi.uCount = 0;
+		//		fi.dwTimeout = 0;
+		//		FlashWindowEx(&fi);
+		//	}
+		//}
 
 		ofunc(g_EngineSound, edx, filter, iEntIndex, iChannel, pSoundEntry, nSoundEntryHash, pSample, flVolume, nSeed, flAttenuation, iFlags, iPitch, pOrigin, pDirection, pUtlVecOrigins, bUpdatePositions, soundtime, speakerentity, unk);
 

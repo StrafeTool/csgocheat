@@ -409,6 +409,7 @@ void Menu::Render()
              //   ImGui::Checkbox("btchams", g_Options.chams_player_backtrack);
 
             }
+            ImGui::Checkbox("Glow", g_Options.glow_players);
             ImGui::Checkbox("ESP", g_Options.esp_player_boxes);
             ImGui::Checkbox("EspOnDeath", g_Options.misc_espdeath);
             ImGui::Checkbox("NadePredict", g_Options.misc_grenadepreview);
@@ -420,7 +421,7 @@ void Menu::Render()
         ImGui::BeginChild("Misc", ImVec2(120, 260), true);
         {
             ImGui::Text("           Misc");
-            ImGui::Checkbox("AutoAccept", g_Options.misc_autoaccept);
+         //   ImGui::Checkbox("AutoAccept", g_Options.misc_autoaccept);
             ImGui::Checkbox("BunnyHop", g_Options.misc_bhop);
             ImGui::Checkbox("FakeLag", g_Options.misc_fakelag);
             ImGui::Checkbox("ViewModel", g_Options.viewmodel_fov);
