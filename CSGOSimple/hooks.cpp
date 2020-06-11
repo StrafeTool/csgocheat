@@ -193,12 +193,12 @@ namespace Hooks {
 		}
 
 		MovementFix::Get().Start(cmd);
-		RageAimbot::Get().StartEnginePred(cmd);
+		//RageAimbot::Get().StartEnginePred(cmd);
 
 		RageAimbot::Get().Do(cmd, Weapon, bSendPacket);
 		LegitAimbot::Get().Do(cmd, Weapon);
 
-		RageAimbot::Get().EndEnginePred();
+	//	RageAimbot::Get().EndEnginePred();
 		MovementFix::Get().End(cmd);
 		if (g_Options.misc_fakelag)
 			antiaim::Get().createmove(cmd, bSendPacket);

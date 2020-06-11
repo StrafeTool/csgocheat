@@ -4024,11 +4024,11 @@ bool ImGui::ColorEdit4(const char* label, float col[4], ImGuiColorEditFlags flag
         }
     }
 
-    if (label != label_display_end && !(flags & ImGuiColorEditFlags_NoLabel))
-    {
-        SameLine(0, style.ItemInnerSpacing.x);
-        TextUnformatted(label, label_display_end);
-    }
+    //if (label != label_display_end && !(flags & ImGuiColorEditFlags_NoLabel))
+    //{
+    //    SameLine(0, style.ItemInnerSpacing.x);
+    //    TextUnformatted(label, label_display_end);
+    //}
 
     // Convert back
     if (picker_active_window == NULL)
