@@ -39,7 +39,7 @@ void Render::GetFonts() {
 	ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(
 		Fonts::Droid_compressed_data,
 		Fonts::Droid_compressed_size,
-		14.f);
+		12.f);
 	
 	// esp font
 	//g_pDefaultFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(
@@ -54,10 +54,10 @@ void Render::GetFonts() {
 		13.f);
 	*/
 
-	g_namefont = ImGui::GetIO().Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\Tahoma.ttf", 12.0f);
+	g_namefont = ImGui::GetIO().Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\Tahoma.ttf", 13.0f);
 
 
-	g_pDefaultFont = ImGui::GetIO().Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\Tahoma.ttf", 12.0f);
+	g_pDefaultFont = ImGui::GetIO().Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\Tahoma.ttf", 16.0f);
 
 
 
@@ -84,7 +84,7 @@ void Render::BeginScene() {
    std::string watermarktext = "user: ";
     if (g_Options.misc_watermark)
     {
-        Render::Get().RenderText(watermarktext + getenv("USERNAME"), 2, 2, 12.f, g_Options.color_watermark, false, true, g_pSecondFont);
+        Render::Get().RenderText(watermarktext + getenv("USERNAME"), 2, 2, 12.f, g_Options.color_watermark, false, true, g_pDefaultFont);
     }
 
 	if (g_EngineClient->IsInGame() && g_LocalPlayer && g_Options.esp_enabled)

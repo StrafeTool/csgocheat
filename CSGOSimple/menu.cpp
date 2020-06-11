@@ -377,7 +377,7 @@ void Menu::Render()
     static int active_sidebar_tab = 0;
 
     ImGui::SetNextWindowPos(ImVec2{ 0, 0 }, ImGuiSetCond_Once);
-    ImGui::SetNextWindowSize(ImVec2{ 390, 400 }, ImGuiSetCond_Once);
+    ImGui::SetNextWindowSize(ImVec2{ 390, 280 }, ImGuiSetCond_Once);
 
     if (ImGui::Begin(" ",
         &_visible,
@@ -385,7 +385,7 @@ void Menu::Render()
         ImGuiWindowFlags_NoResize |
         ImGuiWindowFlags_NoTitleBar)) {
         auto size = ImVec2{ 0.0f, sidebar_size.y };
-        ImGui::BeginChild("Aim", ImVec2(120, 230), true);
+        ImGui::BeginChild("Aim", ImVec2(120, 260), true);
         {
             ImGui::Text("           Aim");
             ImGui::Checkbox("enable", g_Options.legit_enable);
@@ -417,7 +417,7 @@ void Menu::Render()
             ImGui::Checkbox("BulletBeams", g_Options.misc_bulletbeams);
         }ImGui::EndChild();
         ImGui::SameLine();
-        ImGui::BeginChild("Misc", ImVec2(120, 230), true);
+        ImGui::BeginChild("Misc", ImVec2(120, 260), true);
         {
             ImGui::Text("           Misc");
             ImGui::Checkbox("AutoAccept", g_Options.misc_autoaccept);

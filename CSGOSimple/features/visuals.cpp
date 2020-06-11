@@ -305,9 +305,9 @@ void Visuals::Player::RenderWeaponName()
 	if (!weapon->GetCSWeaponData()) return;
 
 	auto text = weapon->GetCSWeaponData()->szWeaponName + 7;
-	auto sz = g_pDefaultFont->CalcTextSizeA(14.f, FLT_MAX, 0.0f, text);
+	auto sz = g_namefont->CalcTextSizeA(14.f, FLT_MAX, 0.0f, text);
 	Render::Get().RenderText(text, ctx.feet_pos.x, ctx.feet_pos.y, 14.f, ctx.clr, true,
-		g_pDefaultFont);
+		g_namefont);
 }
 //--------------------------------------------------------------------------------
 void Visuals::Player::RenderSnapline()
@@ -369,7 +369,7 @@ void Visuals::RenderWeapon(C_BaseCombatWeapon* ent)
 
 	auto name = clean_item_name(ent->GetClientClass()->m_pNetworkName);
 
-	auto sz = g_pDefaultFont->CalcTextSizeA(14.f, FLT_MAX, 0.0f, name);
+	auto sz = g_namefont->CalcTextSizeA(14.f, FLT_MAX, 0.0f, name);
 	int w = bbox.right - bbox.left;
 
 
@@ -561,7 +561,7 @@ void Visuals::RenderDefuseKit(C_BaseEntity* ent)
 	Render::Get().RenderBox(bbox, g_Options.color_esp_defuse);
 
 	auto name = "Defuse Kit";
-	auto sz = g_pDefaultFont->CalcTextSizeA(14.f, FLT_MAX, 0.0f, name);
+	auto sz = g_namefont->CalcTextSizeA(14.f, FLT_MAX, 0.0f, name);
 	int w = bbox.right - bbox.left;
 	Render::Get().RenderText(name, ImVec2((bbox.left + w * 0.5f) - sz.x * 0.5f, bbox.bottom + 1), 14.f, g_Options.color_esp_defuse);
 }
@@ -581,7 +581,7 @@ void Visuals::RenderPlantedC4(C_BaseEntity* ent)
 	std::string timer = std::to_string(bombTimer);
 
 	auto name = (bombTimer < 0.f) ? "Bomb" : timer;
-	auto sz = g_pDefaultFont->CalcTextSizeA(14.f, FLT_MAX, 0.0f, name.c_str());
+	auto sz = g_namefont->CalcTextSizeA(14.f, FLT_MAX, 0.0f, name.c_str());
 	int w = bbox.right - bbox.left;
 
 	Render::Get().RenderText(name, ImVec2((bbox.left + w * 0.5f) - sz.x * 0.5f, bbox.bottom + 1), 14.f, g_Options.color_esp_c4);
@@ -646,7 +646,7 @@ void Visuals::RenderItemEsp(C_BaseEntity* ent)
 	auto bbox = GetBBox(ent);
 	if (bbox.right == 0 || bbox.bottom == 0)
 		return;
-	auto sz = g_pDefaultFont->CalcTextSizeA(14.f, FLT_MAX, 0.0f, itemstr.c_str());
+	auto sz = g_namefont->CalcTextSizeA(14.f, FLT_MAX, 0.0f, itemstr.c_str());
 	int w = bbox.right - bbox.left;
 
 
