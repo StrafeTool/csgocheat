@@ -376,7 +376,7 @@ void Menu::Render()
     static int active_sidebar_tab = 0;
 
     ImGui::SetNextWindowPos(ImVec2{ 0, 0 }, ImGuiSetCond_Once);
-    ImGui::SetNextWindowSize(ImVec2{ 390, 280 }, ImGuiSetCond_Once);
+    ImGui::SetNextWindowSize(ImVec2{ 400, 280 }, ImGuiSetCond_Once);
     if (ImGui::Begin(" ",
         &_visible,
         ImGuiWindowFlags_NoCollapse |
@@ -384,7 +384,7 @@ void Menu::Render()
         ImGuiWindowFlags_NoTitleBar)) {
         auto size = ImVec2{ 0.0f, sidebar_size.y };
 
-        static char* tab_names[] = { "Aim", "Visual", "Misc" };
+        static char* tab_names[] = {"Rage", "Legit", "Visual", "Misc", "Skinchanger" };
         static int   active_tab = 0;
 
         bool placeholder_true = true;
@@ -394,24 +394,56 @@ void Menu::Render()
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
         render_tabs(tab_names, active_tab, group_w / _countof(tab_names), 25.0f, true);
         ImGui::PopStyleVar();
-        if (active_tab == 0) // Legit
+        if (active_tab == 0)
+        {
+            ImGui::BeginGroupBox("Coming soon");
+            {
+                
+            }
+            ImGui::EndGroupBox();
+        }
+
+        else if (active_tab == 1) // Legit
         {
             ImGui::BeginGroupBox("main");
             {
                 //ImGui::Text("Legit");
-                ImGui::Checkbox("enable", g_Options.legit_enable);
-                ImGui::Checkbox("Lagcomp", g_Options.misc_backtrack);
-                ImGui::Text("fov");
-                ImGui::SliderFloat("    ", g_Options.legit_fov, 0, 180, "%.1f");
-                ImGui::Text("rcs");
-                ImGui::SliderInt("      ", g_Options.LegitAimbotRcs, 0, 100, "%d");
-                ImGui::Text("smooth");
-                ImGui::SliderInt("        ", g_Options.LegitAimbotSmooth, 0, 50, "%d");
+
+                ImGui::BeginChild("Aim", ImVec2(115, 210), true);
+                {
+
+                    ImGui::Checkbox("enable", g_Options.legit_enable);
+                    ImGui::Checkbox("Lagcomp", g_Options.misc_backtrack);
+                    ImGui::Text("fov");
+                    ImGui::SliderFloat("    ", g_Options.legit_fov, 0, 180, "%.1f");
+                    ImGui::Text("rcs");
+                    ImGui::SliderInt("      ", g_Options.LegitAimbotRcs, 0, 100, "%d");
+                    ImGui::Text("smooth");
+                    ImGui::SliderInt("        ", g_Options.LegitAimbotSmooth, 0, 50, "%d");
+
+
+                }
+                ImGui::EndChild();
+                ImGui::SameLine();
+                ImGui::BeginChild("misc", ImVec2(115, 210), true);
+                {
+
+                    ImGui::Text("test");
+
+                }
+                ImGui::EndChild();
+                ImGui::SameLine();
+                ImGui::BeginChild("lmao", ImVec2(115, 210), true);
+                {
+                    ImGui::Text("test");
+             
+                }
+                ImGui::EndChild();
+
             }
             ImGui::EndGroupBox();
-
         }
-        else if (active_tab == 1) // Visual
+        else if (active_tab == 2) // Visual
         {
             ImGui::BeginGroupBox("main");
             {
@@ -432,7 +464,7 @@ void Menu::Render()
             }
             ImGui::EndGroupBox();
         }
-        else if (active_tab == 2) // Misc
+        else if (active_tab == 3) // Misc
         {
             ImGui::BeginGroupBox("main");
             {
@@ -444,6 +476,24 @@ void Menu::Render()
                 ImGui::Checkbox("ThirdPerson", g_Options.misc_thirdperson);
                 ImGui::Checkbox("RemoveScope", g_Options.misc_removezoom);
                 ImGui::Checkbox("HitMarker", g_Options.misc_hitmarker);
+
+
+
+                if (ImGui::Button("Save cfg")) {
+                    Config::Get().Save();
+                }
+                if (ImGui::Button("Load cfg")) {
+                    Config::Get().Load();
+                }
+            }
+            ImGui::EndGroupBox();
+        }
+        else if (active_tab == 4) // Misc
+        {
+            ImGui::BeginGroupBox("main");
+            {
+                ImGui::Text("lol u thought");
+               
             }
             ImGui::EndGroupBox();
         }

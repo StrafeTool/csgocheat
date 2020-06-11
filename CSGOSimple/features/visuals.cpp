@@ -160,7 +160,7 @@ bool Visuals::Player::Begin(C_BasePlayer* pl)
 bool Visuals::CreateFonts()
 {
 	esp_font = g_VGuiSurface->CreateFont_();
-	g_VGuiSurface->SetFontGlyphSet(esp_font, "Tahoma", 13, 350, 0, 0, FONTFLAG_OUTLINE, FONTFLAG_ANTIALIAS);
+	g_VGuiSurface->SetFontGlyphSet(esp_font, "Tahoma Bold", 13, 350, 0, 0, FONTFLAG_OUTLINE, FONTFLAG_ANTIALIAS, FONTFLAG_DROPSHADOW);
 
 	return true;
 }
@@ -242,7 +242,7 @@ void Visuals::Player::RenderArmour()
 	if (armour > 100)
 		armour = 100;
 
-	if (armour = 0)
+	if (armour < 1)
 		return;
 	float box_h = (float)fabs(ctx.bbox.bottom - ctx.bbox.top);
 	float off = 2;
@@ -520,12 +520,12 @@ void Visuals::NightMode()
 				if (strstr(group, TEXTURE_GROUP_WORLD))
 				{
 					pMaterial->GetColorModulation(&r, &g, &b);
-					pMaterial->ColorModulate(0.2f, 0.2f, 0.2f);
+					pMaterial->ColorModulate(0.15f, 0.15f, 0.15f);
 				}
 				if (strstr(group, "StaticProp"))
 				{
 					pMaterial->GetColorModulation(&r, &g, &b);
-					pMaterial->ColorModulate(0.6f, 0.6f, 0.6f);
+					pMaterial->ColorModulate(0.4f, 0.4f, 0.4f);
 				}
 				if (strstr(name, "models/props/de_dust/palace_bigdome"))
 				{
@@ -534,7 +534,7 @@ void Visuals::NightMode()
 				if (strstr(name, "models/props/de_dust/palace_pillars"))
 				{
 					pMaterial->GetColorModulation(&r, &g, &b);
-					pMaterial->ColorModulate(0.2f, 0.2f, 0.2f);
+					pMaterial->ColorModulate(0.15f, 0.15f, 0.15f);
 				}
 
 				if (strstr(group, TEXTURE_GROUP_PARTICLE))
