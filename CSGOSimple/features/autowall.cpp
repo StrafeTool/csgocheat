@@ -119,7 +119,7 @@ void Autowall::ClipTraceToPlayers(const Vector& absStart, const Vector absEnd, u
 		return;
 	}
 
-	if (weapon->IsGrenade() || weapon->IsKnife())
+	if (weapon->IsKnifeorNade())
 	{
 		return;
 	}
@@ -232,7 +232,7 @@ void Autowall::ScaleDamage(CGameTrace& enterTrace, CCSWeaponInfo* weaponData, fl
 		return;
 	}
 
-	if (weapon->IsZeus() || weapon->IsGrenade() || weapon->IsKnife())
+	if (weapon->IsZeus() ||weapon->IsKnifeorNade())
 	{
 		return;
 	}

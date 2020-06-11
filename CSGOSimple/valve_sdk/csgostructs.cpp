@@ -73,6 +73,7 @@ CCSWeaponInfo* C_BaseCombatWeapon::GetCSWeaponData()
 	return g_WeaponSystem->GetWpnData(this->m_Item().m_iItemDefinitionIndex());
 }
 
+
 bool C_BaseCombatWeapon::HasBullets()
 {
 	return !IsReloading() && m_iClip1() > 0;
@@ -128,6 +129,35 @@ bool C_BaseCombatWeapon::IsKnife()
 	if (this->m_Item().m_iItemDefinitionIndex() == WEAPON_TASER) return false;
 	return GetCSWeaponData()->iWeaponType == WEAPONTYPE_KNIFE;
 }
+bool C_BaseCombatWeapon::IsKnifeorNade()
+{
+
+	C_BasePlayer* Player = g_LocalPlayer;
+	C_BaseCombatWeapon* pWeapon = (C_BaseCombatWeapon*)Player->m_hActiveWeapon();
+
+	if (!pWeapon)
+		return false;
+
+	std::string WeaponName = pWeapon->GetName();
+
+	if (WeaponName == "weapon_knife")
+		return true;
+	else if (WeaponName == "weapon_incgrenade")
+		return true;
+	else if (WeaponName == "weapon_decoy")
+		return true;
+	else if (WeaponName == "weapon_flashbang")
+		return true;
+	else if (WeaponName == "weapon_hegrenade")
+		return true;
+	else if (WeaponName == "weapon_smokegrenade")
+		return true;
+	else if (WeaponName == "weapon_molotov")
+		return true;
+
+	return false;
+}
+
 
 bool C_BaseCombatWeapon::IsRifle()
 {
@@ -241,7 +271,7 @@ int C_BasePlayer::GetSequenceActivity(int sequence)
 
 CCSGOPlayerAnimState *C_BasePlayer::GetPlayerAnimState()
 {
-	return *(CCSGOPlayerAnimState**)((DWORD)this + 0x3900);
+	return *(CCSGOPlayerAnimState**)((DWORD)this + 0x3914);
 }
 
 void C_BasePlayer::UpdateAnimationState(CCSGOPlayerAnimState *state, QAngle angle)

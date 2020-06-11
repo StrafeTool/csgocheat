@@ -242,7 +242,7 @@ void Visuals::Player::RenderArmour()
 	if (armour > 100)
 		armour = 100;
 
-	if (armour < 0)
+	if (armour = 0)
 		return;
 	float box_h = (float)fabs(ctx.bbox.bottom - ctx.bbox.top);
 	float off = 2;

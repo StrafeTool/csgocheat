@@ -199,8 +199,7 @@ void LegitAimbot::Do(CUserCmd* cmd, C_BaseCombatWeapon* Weapon)
 	if (!g_LocalPlayer ||
 		!g_LocalPlayer->IsAlive() ||
 		!Weapon ||
-		Weapon->IsKnife() ||
-		Weapon->IsGrenade() ||
+		Weapon->IsKnifeorNade() ||
 		!g_Options.legit_enable ||
 		!g_Options.legit_fov)
 		return;

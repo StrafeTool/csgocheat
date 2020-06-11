@@ -367,8 +367,7 @@ void RageAimbot::Do(CUserCmd* cmd, C_BaseCombatWeapon* Weapon, bool& bSendPacket
 		if (!g_LocalPlayer ||
 			!g_LocalPlayer->IsAlive() ||
 			!Weapon ||
-			Weapon->IsKnife() ||
-			Weapon->IsGrenade() ||
+			Weapon->IsKnifeorNade() ||
 			!g_Options.rage_enable)
 		{
 			ClearRecords(i);

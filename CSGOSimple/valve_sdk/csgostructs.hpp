@@ -181,11 +181,19 @@ public:
 
 
 	CCSWeaponInfo* GetCSWeaponData();
+	std::string GetName()
+	{
+		///TODO: Test if szWeaponName returns proper value for m4a4 / m4a1-s or it doesnt recognize them.
+		return std::string(this->GetCSWeaponData()->szWeaponName);
+	}
 	bool HasBullets();
 	bool CanFire();
 	bool IsGrenade();
 	bool IsZeus();
 	bool IsKnife();
+
+	bool IsKnifeorNade();
+
 	bool IsReloading();
 	bool IsRifle();
 	bool IsPistol();
@@ -282,6 +290,7 @@ public:
 
 
 	NETPROP(m_flLowerBodyYawTargetProp, "DT_CSPlayer", "m_flLowerBodyYawTarget");
+	
 	CUserCmd*& m_pCurrentCommand();
 
 	/*gladiator v2*/
@@ -316,6 +325,7 @@ public:
 		static unsigned int _m_flMaxspeed = Utils::FindInDataMap(GetPredDescMap(), "m_flMaxspeed");
 		return *(float_t*)((uintptr_t)this + _m_flMaxspeed);
 	}
+
 
 
 
