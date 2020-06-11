@@ -116,6 +116,8 @@ public:
 	bool IsWeapon();
 	bool IsPlantedC4();
 	bool IsDefuseKit();
+	//bool IsNade();
+	void FixSetupBones(matrix3x4_t* Matrix);
 	//bool isSpotted();
 };
 
@@ -233,6 +235,7 @@ public:
 	NETVAR(bool, m_bGunGameImmunity, "DT_CSPlayer", "m_bGunGameImmunity");
 	NETVAR(int32_t, m_iShotsFired, "DT_CSPlayer", "m_iShotsFired");
 	NETVAR(QAngle, m_angEyeAngles, "DT_CSPlayer", "m_angEyeAngles[0]");
+	NETVAR(Vector, eyeangles, "DT_CSPlayer", "m_angEyeAngles[0]");
 	NETVAR(int, m_ArmorValue, "DT_CSPlayer", "m_ArmorValue");
 	NETVAR(bool, m_bHasHeavyArmor, "DT_CSPlayer", "m_bHasHeavyArmor");
 	NETVAR(bool, m_bHasHelmet, "DT_CSPlayer", "m_bHasHelmet");

@@ -198,11 +198,11 @@ void Visuals::Player::RenderHealth()
 	int y = ctx.bbox.top;
 	int w = 4;
 	int h = box_h;
-
-	g_VGuiSurface->DrawSetColor(Color::Black);
+	//25, 25, 25, 100
+	g_VGuiSurface->DrawSetColor(Color(25, 25, 25, 100));
 	g_VGuiSurface->DrawFilledRect(x, y, x + w, y + h);
 
-	g_VGuiSurface->DrawSetColor(Color(red, green, 0, 255));
+	g_VGuiSurface->DrawSetColor(Color(red, green, 0, 100));
 	g_VGuiSurface->DrawOutlinedRect(x + 1, y + height + 1, x + w - 1, y + h - 1);
 
 
@@ -216,21 +216,86 @@ void Visuals::Player::RenderHealth()
 //--------------------------------------------------------------------------------
 void Visuals::Player::RenderArmour()
 {
-	auto  armour = ctx.pl->m_ArmorValue();
-	float box_h = (float)fabs(ctx.bbox.bottom - ctx.bbox.top);
-	//float off = (box_h / 6.f) + 5;
-	float off = 4;
+	int armour = ctx.pl->m_ArmorValue();
+	if (armour > 100)
+		armour = 100;
 
-	int height = (((box_h * armour) / 100));
+	if (armour < 0)
+		return;
+	float box_h = (float)fabs(ctx.bbox.bottom - ctx.bbox.top);
+	float off = 2;
+
+	auto height = box_h - (((box_h * armour) / 100));
+
+	int green = int(armour * 2.55f);
+	int red = 255 - green;
 
 	int x = ctx.bbox.right + off;
 	int y = ctx.bbox.top;
 	int w = 4;
 	int h = box_h;
 
-	Render::Get().RenderBox(x, y, x + w, y + h, Color::Black, 1.f, true);
-	Render::Get().RenderBox(x + 1, y + 1, x + w - 1, y + height - 2, Color(0, 50, 255, 255), 1.f, true);
+	g_VGuiSurface->DrawSetColor(Color(25, 25, 25, 100));
+	g_VGuiSurface->DrawFilledRect(x, y, x + w, y + h);
+
+	g_VGuiSurface->DrawSetColor(Color(0, 172, 235, 100));
+	g_VGuiSurface->DrawOutlinedRect(x + 1, y + height + 1, x + w - 1, y + h - 1);
+
+
+
+	std::string hp = std::to_string(armour);
+	auto name = (armour < 0.f) ? "%d" : hp;
+	auto sz = g_namefont->CalcTextSizeA(14.f, FLT_MAX, 0.0f, name.c_str());
+	if (armour != 100)
+	Render::Get().RenderText(name, ImVec2(x - w, y + height), 14.f, Color(255, 255, 255, 255));
+
+
+
 }
+void Visuals::Player::renderammo()// ignore this just saved some stuff to it unless i have time to actually make one
+{
+
+
+	//int armour = ctx.pl->max();
+	//if (armour > 100)
+	//	armour = 100;
+	//float box_h = (float)fabs(ctx.bbox.left - ctx.bbox.right);
+	//float off = 4;
+	////	float box_h2 = (float)fabs(ctx.feet_pos.x - ctx.feet_pos.y);
+	//auto height = box_h - (((box_h * armour) / 100));
+
+	//int green = int(armour * 2.55f);
+	//int red = 255 - green;
+
+	//int x = ctx.bbox.left - off;
+	//int y = ctx.bbox.bottom;
+	//int w = 4;
+	//int h = box_h;
+	//auto height2 = box_h - (((box_h * armour) / 100));
+	//g_VGuiSurface->DrawSetColor(0, 0, 0, 100);
+	////	g_VGuiSurface->DrawFilledRect(x, y, x + w, y + h);
+	//g_VGuiSurface->DrawFilledRect(x, y, x + box_h + 1, y + w);
+	////g_VGuiSurface->DrawFilledRect(ctx.feet_pos.x, ctx.feet_pos.y,  ctx.feet_pos.x + w, ctx.feet_pos.y );
+
+
+	//g_VGuiSurface->DrawSetColor(Color(0, 149, 255, 100));
+	////g_VGuiSurface->DrawFilledRect(x, y, x + height2 + 1, y + w);
+	//g_VGuiSurface->DrawFilledRect(x + height2, y, x + height2 + 1, y + w);
+	////g_VGuiSurface->DrawOutlinedRect(x + height, y + 1, x + w - 1, y + height - 1);
+
+
+
+
+	//std::string hp = std::to_string(armour);
+	//auto name = (armour < 0.f) ? "%d" : hp;
+	//auto sz = g_namefont->CalcTextSizeA(14.f, FLT_MAX, 0.0f, name.c_str());
+	////if (armour != 100)
+	//Render::Get().RenderText(name, ImVec2(x - w, y + height), 14.f, Color(255, 255, 255, 255));
+
+
+
+}
+
 //--------------------------------------------------------------------------------
 void Visuals::Player::RenderWeaponName()
 {
@@ -254,11 +319,23 @@ void Visuals::Player::RenderSnapline()
 	Render::Get().RenderLine(screen_w / 2.f, (float)screen_h,
 		ctx.feet_pos.x, ctx.feet_pos.y, ctx.clr);
 }
-//--------------------------------------------------------------------------------
+void Visuals::CrosshairRecoil()
+{
+	static auto crosshair_recoil = g_CVar->FindVar("cl_crosshair_recoil");
+
+	if (!g_Options.esp_crosshair)
+		crosshair_recoil->SetValue(0);
+	else
+		crosshair_recoil->SetValue(1);
+
+}//--------------------------------------------------------------------------------
+
+
+
 void Visuals::RenderCrosshair()
 {
 	static auto crosshair = g_CVar->FindVar("weapon_debug_spread_show");
-	if (g_LocalPlayer->m_bIsScoped())
+	if (g_LocalPlayer->m_bIsScoped() || !g_Options.esp_crosshair)
 		crosshair->SetValue(0);
 	else
 		crosshair->SetValue(3);
@@ -652,12 +729,30 @@ void Visuals::AddToDrawList() {
 		if (i <= g_GlobalVars->maxClients) {
 			auto player = Player();
 			if (player.Begin((C_BasePlayer*)entity)) {
-				if (g_Options.esp_player_snaplines) player.RenderSnapline();
-				if (g_Options.esp_player_boxes)     player.RenderBox();
-				if (g_Options.esp_player_boxes)   player.RenderWeaponName();
-				if (g_Options.esp_player_names)     player.RenderName();
-				if (g_Options.esp_player_boxes)    player.RenderHealth();
-				if (g_Options.esp_player_boxes)    player.RenderArmour();
+
+				if (!g_Options.misc_espdeath)
+				{				
+						if (g_Options.esp_player_snaplines) player.RenderSnapline();
+						if (g_Options.esp_player_boxes)     player.RenderBox();
+						if (g_Options.esp_player_boxes)   player.RenderWeaponName();
+						if (g_Options.esp_player_boxes)     player.RenderName();
+						if (g_Options.esp_player_boxes)    player.RenderHealth();
+						if (g_Options.esp_player_boxes)    player.RenderArmour();					
+
+				}
+				else if (g_Options.misc_espdeath)
+				{
+					if (!g_LocalPlayer->IsAlive())
+					{
+						if (g_Options.esp_player_snaplines) player.RenderSnapline();
+						if (g_Options.esp_player_boxes)     player.RenderBox();
+						if (g_Options.esp_player_boxes)   player.RenderWeaponName();
+						if (g_Options.esp_player_boxes)     player.RenderName();
+						if (g_Options.esp_player_boxes)    player.RenderHealth();
+						if (g_Options.esp_player_boxes)    player.RenderArmour();
+					}
+				}
+
 			}
 		}
 		else if (g_Options.esp_dropped_weapons && entity->IsWeapon())
@@ -672,6 +767,10 @@ void Visuals::AddToDrawList() {
 
 	if (g_Options.esp_crosshair)
 		RenderCrosshair();
+
+
+
+	
 }
 
 enum FontRenderFlag_t

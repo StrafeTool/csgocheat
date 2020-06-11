@@ -385,69 +385,49 @@ void Menu::Render()
         ImGuiWindowFlags_NoResize |
         ImGuiWindowFlags_NoTitleBar)) {
         auto size = ImVec2{ 0.0f, sidebar_size.y };
-        ImGui::BeginChild("aimbot", ImVec2(120, 380), true);
+        ImGui::BeginChild("Aim", ImVec2(120, 230), true);
         {
-            ImGui::Text("Legitbot");
-            ImGui::Checkbox("legitbot", g_Options.legit_enable);
-            if (g_Options.legit_enable)
-            {
-
-                ImGui::Checkbox("Lagcomp", g_Options.misc_triggerbot);
-                ImGui::Text("fov");
-                ImGui::SliderFloat("", g_Options.legit_fov, 0, 20);
-                ImGui::Text("smooth");
-                ImGui::SliderInt("   ", g_Options.LegitAimbotSmooth, 0, 100);
-                ImGui::Text("rcs");
-                ImGui::SliderInt("    ", g_Options.LegitAimbotRcs, 0, 100);
-
-            }
-            ImGui::Checkbox("ragebot", g_Options.rage_enable);
-            if (g_Options.rage_enable)
-            {
-                ImGui::SliderFloat("      ", g_Options.RageAimbotHitchance, 0, 100);
-                ImGui::SliderFloat("       ", g_Options.RageAimbotMinDmg, 0, 120);
-
-            }
-           
-
-
-
+            ImGui::Text("           Aim");
+            ImGui::Checkbox("enable", g_Options.legit_enable);
+            ImGui::Checkbox("Lagcomp", g_Options.misc_backtrack);
+            ImGui::Text("fov");
+            ImGui::SliderFloat("    ", g_Options.legit_fov, 0, 180, "%.1f");
+            ImGui::Text("rcs");
+            ImGui::SliderInt("      ", g_Options.LegitAimbotRcs, 0, 100,"%d");
+            ImGui::Text("smooth");
+            ImGui::SliderInt("        ", g_Options.LegitAimbotSmooth, 0, 50, "%d");
 
         }ImGui::EndChild();
         ImGui::SameLine();
-        ImGui::BeginChild("Visual", ImVec2(120, 380), true);
+        ImGui::BeginChild("Visual", ImVec2(120, 260), true);
         {
-            ImGui::Text("Visual");
+            ImGui::Text("           Visual");
             ImGui::Checkbox("Chams", g_Options.chams_player_enabled);
-            if (g_Options.chams_player_enabled) {
-                ImGui::Checkbox("XQZ", g_Options.chams_player_ignorez);
+            if (g_Options.chams_player_enabled)
+            {
+                ImGui::Checkbox("IgnoreZ", g_Options.chams_player_ignorez);
+             //   ImGui::Checkbox("btchams", g_Options.chams_player_backtrack);
+
             }
-            ImGui::Checkbox("Glow", g_Options.glow_players);
-            ImGui::Checkbox("Boxes", g_Options.esp_player_boxes);
-            ImGui::Checkbox("Nightmode", g_Options.misc_nightmode);
-            ImGui::Checkbox("Scope", g_Options.misc_removezoom);
-            ImGui::Checkbox("Beams", g_Options.misc_bulletbeams);
-            ImGui::Checkbox("Hitmarker", g_Options.misc_hitmarker);
-
+            ImGui::Checkbox("ESP", g_Options.esp_player_boxes);
+            ImGui::Checkbox("EspOnDeath", g_Options.misc_espdeath);
+            ImGui::Checkbox("NadePredict", g_Options.misc_grenadepreview);
+            ImGui::Checkbox("NightMode", g_Options.misc_nightmode);
+            ImGui::Checkbox("crosshair", g_Options.esp_crosshair);
+            ImGui::Checkbox("BulletBeams", g_Options.misc_bulletbeams);
         }ImGui::EndChild();
-
         ImGui::SameLine();
-        ImGui::BeginChild("Misc", ImVec2(120, 380), true);
+        ImGui::BeginChild("Misc", ImVec2(120, 230), true);
         {
-            ImGui::Text("Misc");
-            ImGui::Checkbox("Bunny Hop", g_Options.misc_bhop);
-            ImGui::Checkbox("TPerson", g_Options.misc_thirdperson);
-            ImGui::Checkbox("NadePred", g_Options.misc_grenadepreview);
-            ImGui::Checkbox("Crosshair", g_Options.esp_crosshair);
-            ImGui::Checkbox("Fakelag", g_Options.misc_fakelag);
-            if (g_Options.misc_fakelag)
-                ImGui::SliderInt(" ", g_Options.misc_fakelagammount, 0, 14);
-            ImGui::Checkbox("VModel", g_Options.viewmodel_fov);
-
+            ImGui::Text("           Misc");
+            ImGui::Checkbox("AutoAccept", g_Options.misc_autoaccept);
+            ImGui::Checkbox("BunnyHop", g_Options.misc_bhop);
+            ImGui::Checkbox("FakeLag", g_Options.misc_fakelag);
+            ImGui::Checkbox("ViewModel", g_Options.viewmodel_fov);
+            ImGui::Checkbox("ThirdPerson", g_Options.misc_thirdperson);
+            ImGui::Checkbox("RemoveScope", g_Options.misc_removezoom);
+            ImGui::Checkbox("HitMarker", g_Options.misc_hitmarker);
         }ImGui::EndChild();
-
-        //RenderEmptyTab();
-
         ImGui::End();
     }
 }
@@ -459,19 +439,29 @@ void Menu::Toggle()
 
 void Menu::CreateStyle()
 {
-	ImGui::StyleColorsDark();
-	ImGui::SetColorEditOptions(ImGuiColorEditFlags_HEX);
-	_style.FrameRounding = 10.f;
-	_style.WindowRounding = 10.f;
-	_style.ChildRounding = 0.f;
-	_style.Colors[ImGuiCol_Button] = ImVec4(0.25f, 0.3f, 0.35f, 1.0f);
-	_style.Colors[ImGuiCol_Header] = ImVec4(0.25f, 0.3f, 0.35f, 1.0f);
-	_style.Colors[ImGuiCol_HeaderHovered] = ImVec4(0.25f, 0.3f, 0.35f, 1.0f);
-	//_style.Colors[ImGuiCol_ButtonHovered] = ImVec4(0.000f, 0.545f, 1.000f, 1.000f);
-	//_style.Colors[ImGuiCol_ButtonActive] = ImVec4(0.060f, 0.416f, 0.980f, 1.000f);
-	_style.Colors[ImGuiCol_FrameBg] = ImVec4(0.2f, 0.25f, 0.3f, 1.0f);
-	_style.Colors[ImGuiCol_WindowBg] = ImVec4(0.2f, 0.25f, 0.3f, 1.0f);
-	_style.Colors[ImGuiCol_PopupBg] = ImVec4(0.2f, 0.25f, 0.3f, 1.0f);
-	ImGui::GetStyle() = _style;
+    ImGui::StyleColorsDark();
+    ImGui::SetColorEditOptions(ImGuiColorEditFlags_HEX);
+    _style.FrameRounding = 4.f;
+    _style.WindowRounding = 4.f;
+    _style.ChildRounding = 4.f;
+    ImGui::GetStyle() = _style;
 }
+
+//void Menu::CreateStyle()
+//{
+//	ImGui::StyleColorsDark();
+//	ImGui::SetColorEditOptions(ImGuiColorEditFlags_HEX);
+//	_style.FrameRounding = 10.f;
+//	_style.WindowRounding = 10.f;
+//	_style.ChildRounding = 0.f;
+//	_style.Colors[ImGuiCol_Button] = ImVec4(0.25f, 0.3f, 0.35f, 1.0f);
+//	_style.Colors[ImGuiCol_Header] = ImVec4(0.25f, 0.3f, 0.35f, 1.0f);
+//	_style.Colors[ImGuiCol_HeaderHovered] = ImVec4(0.25f, 0.3f, 0.35f, 1.0f);
+//	//_style.Colors[ImGuiCol_ButtonHovered] = ImVec4(0.000f, 0.545f, 1.000f, 1.000f);
+//	//_style.Colors[ImGuiCol_ButtonActive] = ImVec4(0.060f, 0.416f, 0.980f, 1.000f);
+//	_style.Colors[ImGuiCol_FrameBg] = ImVec4(0.2f, 0.25f, 0.3f, 1.0f);
+//	_style.Colors[ImGuiCol_WindowBg] = ImVec4(0.2f, 0.25f, 0.3f, 1.0f);
+//	_style.Colors[ImGuiCol_PopupBg] = ImVec4(0.2f, 0.25f, 0.3f, 1.0f);
+//	ImGui::GetStyle() = _style;
+//}
 

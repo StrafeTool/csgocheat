@@ -12,12 +12,14 @@ void TimeWarp::CreateMove(CUserCmd* cmd)
 
 	int bestTargetIndex = -1;
 	float bestFov = FLT_MAX;
-
+	StoredData setupdatas;
 	if (!g_LocalPlayer->IsAlive())
 		return;
 
 	for (int i = 1; i < g_EngineClient->GetMaxClients(); i++)
 	{
+
+
 		auto pEntity = static_cast<C_BasePlayer*>(g_EntityList->GetClientEntity(i));
 		if (!pEntity || !g_LocalPlayer) continue;
 		if (!pEntity->IsPlayer()) continue;
@@ -25,11 +27,17 @@ void TimeWarp::CreateMove(CUserCmd* cmd)
 		if (pEntity->IsDormant()) continue;
 		if (!pEntity->IsAlive()) continue;
 		if (pEntity->m_iTeamNum() == g_LocalPlayer->m_iTeamNum()) continue;
+		if (pEntity != g_LocalPlayer)
+			pEntity->FixSetupBones(Matrixs[pEntity->EntIndex()]);
+
 
 		float simtime = pEntity->m_flSimulationTime();
+		//float curtime = g_GlobalVars->curtime;
 		Vector hitboxPos = pEntity->GetHitboxPos(0);
-
+	
+		
 		TimeWarpData[i][cmd->command_number % (static_cast<int>(NUM_OF_TICKS) + 1)] = StoredData{ simtime, hitboxPos };
+		pEntity->SetupBones(TimeWarpData[i][cmd->command_number % (NUM_OF_TICKS + 1)].boneMatrix, MAXSTUDIOBONES, BONE_USED_BY_ANYTHING, simtime);
 		Vector ViewDir;
 		Math::AngleVectors(cmd->viewangles + (g_LocalPlayer->m_aimPunchAngle() * 2.f), ViewDir);
 		float FOVDistance = Math::DistancePointToLine(hitboxPos, g_LocalPlayer->GetEyePos(), ViewDir);
@@ -39,29 +47,38 @@ void TimeWarp::CreateMove(CUserCmd* cmd)
 			bestFov = FOVDistance;
 			bestTargetIndex = i;
 		}
-	}
 
-	float bestTargetSimTime = -1;
-	if (bestTargetIndex != -1)
-	{
-		float tempFloat = FLT_MAX;
-		Vector ViewDir;
-		Math::AngleVectors(cmd->viewangles + (g_LocalPlayer->m_aimPunchAngle() * 2.f), ViewDir);
-		for (int t = 0; t < static_cast<int>(NUM_OF_TICKS); ++t)
+
+		float bestTargetSimTime = -1;
+		if (bestTargetIndex != -1)
 		{
-			float tempFOVDistance = Math::DistancePointToLine(TimeWarpData[bestTargetIndex][t].hitboxPos, g_LocalPlayer->GetEyePos(), ViewDir);
-			if (tempFloat > tempFOVDistance && TimeWarpData[bestTargetIndex][t].simtime > g_LocalPlayer->m_flSimulationTime() - 1)
+			float tempFloat = FLT_MAX;
+			Vector ViewDir;
+			Math::AngleVectors(cmd->viewangles + (g_LocalPlayer->m_aimPunchAngle() * 2.f), ViewDir);
+			for (int t = 0; t < static_cast<int>(NUM_OF_TICKS); ++t)
 			{
-				if (g_LocalPlayer->CanSeePlayer(static_cast<C_BasePlayer*>(g_EntityList->GetClientEntity(bestTargetIndex)), TimeWarpData[bestTargetIndex][t].hitboxPos))
+				float tempFOVDistance = Math::DistancePointToLine(TimeWarpData[bestTargetIndex][t].hitboxPos, g_LocalPlayer->GetEyePos(), ViewDir);
+				if (tempFloat > tempFOVDistance && TimeWarpData[bestTargetIndex][t].simtime > g_LocalPlayer->m_flSimulationTime() - 1)
 				{
-					tempFloat = tempFOVDistance;
-					bestTargetSimTime = TimeWarpData[bestTargetIndex][t].simtime;
+					if (g_LocalPlayer->CanSeePlayer(static_cast<C_BasePlayer*>(g_EntityList->GetClientEntity(bestTargetIndex)), TimeWarpData[bestTargetIndex][t].hitboxPos))
+					{
+						//auto pEntity = static_cast<C_BasePlayer*>(g_EntityList->GetClientEntity(i));
+						tempFloat = tempFOVDistance;
+						bestTargetSimTime = TimeWarpData[bestTargetIndex][t].simtime;
+						//memcpy(setupdatas.Matrix, Matrixs[pEntity->EntIndex()], (sizeof(matrix3x4_t) * 128));
+					}
 				}
 			}
-		}
 
-		if (bestTargetSimTime >= 0 && cmd->buttons & IN_ATTACK)
-			cmd->tick_count = TIME_TO_TICKS(bestTargetSimTime);
+			if (bestTargetSimTime >= 0 && cmd->buttons & IN_ATTACK)
+				cmd->tick_count = TIME_TO_TICKS(bestTargetSimTime);
+		}
+		if (bestTargetIndex < 0)
+		{
+			setupdatas.Velocity = abs(pEntity->m_vecVelocity().Length2D());
+			setupdatas.SimTime = pEntity->m_flSimulationTime();
+			//memcpy(setupdatas.Matrix, Matrixs[pEntity->EntIndex()], (sizeof(matrix3x4_t) * 128));
+		}
 	}
 }
 
@@ -177,8 +194,7 @@ void LegitBacktrack::Do(CUserCmd* cmd)
 
 void LegitAimbot::Do(CUserCmd* cmd, C_BaseCombatWeapon* Weapon)
 {
-
-
+	LegitBacktrack::Get().Do(cmd);
 	TimeWarp::Get().CreateMove(cmd);
 	if (!g_LocalPlayer ||
 		!g_LocalPlayer->IsAlive() ||
@@ -206,17 +222,7 @@ void LegitAimbot::Do(CUserCmd* cmd, C_BaseCombatWeapon* Weapon)
 			continue;
 
 		Vector Hitbox;
-		bool Backtrack = false;
-		if (g_Options.misc_backtrack && LegitBacktrack::Get().ClosestTick != -1 && LegitBacktrack::Get().ClosestTick < LegitBacktrack::Get().BacktrackRecords[i].size() && LegitBacktrack::Get().BacktrackRecords[i].at(LegitBacktrack::Get().ClosestTick).MatrixBuilt)
-		{
-			Hitbox = Player->GetHitboxPos2(GetHitboxFromInt(g_Options.legit_hitbox),
-				LegitBacktrack::Get().BacktrackRecords[i].at(LegitBacktrack::Get().ClosestTick).BoneMatrix);
-
-			Backtrack = true;
-		}
-		if (!Backtrack)
-			Hitbox = Player->GetHitboxPos(GetHitboxFromInt(g_Options.legit_hitbox));
-
+		Hitbox = Player->GetHitboxPos(GetHitboxFromInt(g_Options.legit_hitbox));
 		float FovDistance = Math::GetFOV(ViewAngle + (g_LocalPlayer->m_aimPunchAngle() * g_CVar->FindVar("weapon_recoil_scale")->GetFloat()), Math::CalcAngle(g_LocalPlayer->GetEyePos(), Hitbox));
 
 		if (MaxPlayerFov > FovDistance)
@@ -233,16 +239,9 @@ void LegitAimbot::Do(CUserCmd* cmd, C_BaseCombatWeapon* Weapon)
 		C_BasePlayer* ClosestPlayer = C_BasePlayer::GetPlayerByIndex(ClosestPlayerIndex);
 		if (!ClosestPlayer) return;
 		Vector Hitbox;
-		bool Backtrack = false;
-		if (g_Options.misc_backtrack && LegitBacktrack::Get().ClosestTick != -1 && LegitBacktrack::Get().ClosestTick < LegitBacktrack::Get().BacktrackRecords[ClosestPlayerIndex].size() && LegitBacktrack::Get().BacktrackRecords[ClosestPlayerIndex].at(LegitBacktrack::Get().ClosestTick).MatrixBuilt)
-		{
-			Hitbox = ClosestPlayer->GetHitboxPos2(GetHitboxFromInt(g_Options.legit_hitbox),
-				LegitBacktrack::Get().BacktrackRecords[ClosestPlayerIndex].at(LegitBacktrack::Get().ClosestTick).BoneMatrix);
+		
 
-			Backtrack = true;
-		}
-		if (!Backtrack)
-			Hitbox = ClosestPlayer->GetHitboxPos(GetHitboxFromInt(g_Options.legit_hitbox));
+		Hitbox = ClosestPlayer->GetHitboxPos(GetHitboxFromInt(g_Options.legit_hitbox));
 		AimAngle = Math::CalcAngle(g_LocalPlayer->GetEyePos(), Hitbox);
 		AimAngle -= (g_LocalPlayer->m_aimPunchAngle() * g_CVar->FindVar("weapon_recoil_scale")->GetFloat()) * (float(g_Options.LegitAimbotRcs) / 100.f);
 		Math::Normalize3(AimAngle);
@@ -254,31 +253,14 @@ void LegitAimbot::Do(CUserCmd* cmd, C_BaseCombatWeapon* Weapon)
 		QAngle FinalAngle = ViewAngle - DeltaAngle / Smoothing;
 		Math::Normalize3(FinalAngle);
 		Math::ClampAngles(FinalAngle);
-		if (Backtrack)
-		{
-			cmd->tick_count = TIME_TO_TICKS(LegitBacktrack::Get().BacktrackRecords[ClosestPlayerIndex].at(LegitBacktrack::Get().ClosestTick).SimulationTime + GetLerpTimes());
-		}
-		//if (!GetKeyState(VK_LBUTTON))
-		//	
-		//	cmd->viewangles = FinalAngle;
-		////if (Variables.LegitAimbotType != 2)
-		//g_EngineClient->SetViewAngles(&cmd->viewangles);
 
 
 		if (cmd->buttons & IN_ATTACK)
 		{
 			cmd->viewangles = FinalAngle;
 			g_EngineClient->SetViewAngles(&cmd->viewangles);
+		}	
 
-		}
-		
-		//if (!(cmd->buttons & IN_ATTACK) && Weapon->CanFire() && GetAsyncKeyState(VK_XBUTTON1) && cmd->viewangles = FinalAngle)
-		//{
-		//	//globals::shots_fired[entity->EntIndex()] += 1;
-		//	cmd->viewangles = FinalAngle;
-		//	g_EngineClient->SetViewAngles(&cmd->viewangles);
-		//	cmd->buttons |= IN_ATTACK;
-		//}
 
 	}
 }

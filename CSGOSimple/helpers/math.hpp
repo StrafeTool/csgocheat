@@ -22,10 +22,12 @@ namespace Math
 		i >>= 1;
 		return *(float*)&i;
 	}
+
 	float VectorDistance(const Vector& v1, const Vector& v2);
 	float DistancePointToLine(Vector Point, Vector LineOrigin, Vector Dir);
 	QAngle CalcAngle(const Vector& src, const Vector& dst);
 	float GetFOV(const QAngle& viewAngle, const QAngle& aimAngle);
+
 	template<class T>
 	void Normalize3(T& vec)
 	{
@@ -35,6 +37,7 @@ namespace Math
 		}
 		vec[2] = 0.f;
 	}
+
     void ClampAngles(QAngle& angles);
     void VectorTransform(const Vector& in1, const matrix3x4_t& in2, Vector& out);
     void AngleVectors(const QAngle &angles, Vector& forward);

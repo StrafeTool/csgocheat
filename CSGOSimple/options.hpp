@@ -31,11 +31,11 @@ public:
 		//rage
 		OPTION(float, RageAimbotMinDmg, 30);
 		OPTION(float, RageAimbotHitchance, 60);
-		OPTION(bool, rage_enable, false);
+		OPTION(bool, rage_enable, true);
 
 
 		//legit
-		OPTION(bool, legit_enable, true);
+		OPTION(bool, legit_enable, false);
 		OPTION(float, legit_fov, 5.f);
 		OPTION(int, legit_hitbox, 0);
 		OPTION(int, LegitAimbotRcs, 100);//LegitAimbotSmooth
@@ -47,12 +47,13 @@ public:
 		OPTION(bool, esp_enabled, true);
 		OPTION(bool, esp_enemies_only, true);
 		OPTION(bool, esp_player_boxes, false);
+		OPTION(bool, misc_espdeath, false);
 		OPTION(bool, esp_player_names, false);
 		OPTION(bool, esp_player_health, false);
 		OPTION(bool, esp_player_armour, false);
 		OPTION(bool, esp_player_weapons, false);
 		OPTION(bool, esp_player_snaplines, false);
-		OPTION(bool, esp_crosshair, true);
+		OPTION(bool, esp_crosshair, false);
 		OPTION(bool, esp_dropped_weapons, false);
 		OPTION(bool, esp_defuse_kit, false);
 		OPTION(bool, esp_planted_c4, true);
@@ -78,6 +79,7 @@ public:
 		OPTION(bool, chams_player_wireframe, false);
 		OPTION(bool, chams_player_flat, false);
 		OPTION(bool, chams_player_ignorez, false);
+		OPTION(bool, chams_player_backtrack, false);
 		OPTION(bool, chams_player_glass, false);
 		OPTION(bool, chams_arms_enabled, false);
 		OPTION(bool, chams_arms_wireframe, false);
@@ -102,15 +104,16 @@ public:
 		OPTION(float, misc_nightmode_prop_g, 1.f);
 		OPTION(float, misc_nightmode_prop_b, 1.f);
 		OPTION(float, misc_nightmode_prop_alpha, 1.f);
-		OPTION(bool, misc_backtrack, false);
+		OPTION(bool, misc_backtrack, true);
 		OPTION(int, misc_backtrack_slider, 12);
 		OPTION(bool, misc_removezoom, false);
 		OPTION(bool, misc_bhop, true);
+		OPTION(bool, misc_autoaccept, true);
 		OPTION(bool, misc_autostrafe, true);
 		OPTION(bool, misc_no_hands, false);
 		OPTION(bool, misc_thirdperson, false);
 		OPTION(bool, misc_showranks, true);
-		OPTION(bool, misc_watermark, false);
+		OPTION(bool, misc_watermark, true);
 		OPTION(float, misc_thirdperson_dist, 150.f);
 		OPTION(bool, viewmodel_fov, false);		
 
@@ -141,7 +144,7 @@ public:
 		OPTION(Color, color_chams_player_enemy_occluded, Color(27, 161, 209));
 		OPTION(Color, color_chams_arms_visible, Color(0, 128, 255));
 		OPTION(Color, color_chams_arms_occluded, Color(0, 128, 255));
-		OPTION(Color, color_watermark, Color(0, 128, 255)); // no menu config cuz its useless
+		OPTION(Color, color_watermark, Color(255, 255, 255)); // no menu config cuz its useless
 };
 
 inline Options g_Options;

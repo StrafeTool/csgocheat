@@ -189,37 +189,11 @@ namespace Hooks {
 
 		MovementFix::Get().Start(cmd);
 		RageAimbot::Get().StartEnginePred(cmd);
-		pLocal2 = static_cast<C_BasePlayer*>(g_EntityList->GetClientEntity(g_EngineClient->GetLocalPlayer()));
-	//	TimeWarp::Get().CreateMove(cmd);
-		if (g_Options.rage_enable)
-		{
-			Prediction(cmd, pLocal2);
-			g_Options.legit_enable == false;
-			g_Options.misc_triggerbot == false;
-			RageAimbot::Get().StoreRecords();
-			RageAimbot::Get().Do(cmd, Weapon, bSendPacket);
 
-
-		}
-		else if (g_Options.legit_enable)
-		{
-
-			g_Options.rage_enable == false;
-		//	g_Options.misc_triggerbot == false;
-			LegitBacktrack::Get().Do(cmd);
-			LegitAimbot::Get().Do(cmd, Weapon);
-
-		}
-
-
-
-		/*if (g_Options.misc_triggerbot)
-			triggerbot::Triggerbot(cmd);*/
-
-
+		RageAimbot::Get().Do(cmd, Weapon, bSendPacket);
+		LegitAimbot::Get().Do(cmd, Weapon);
 
 		RageAimbot::Get().EndEnginePred();
-
 		MovementFix::Get().End(cmd);
 		if (g_Options.misc_fakelag)
 			antiaim::Get().createmove(cmd, bSendPacket);
@@ -328,12 +302,12 @@ namespace Hooks {
 		static auto ofunc = sound_hook.get_original<decltype(&hkEmitSound1)>(index::EmitSound1);
 
 
-		if (!strcmp(pSoundEntry, "UIPanorama.popup_accept_match_beep")) {
-			static auto fnAccept = reinterpret_cast<bool(__stdcall*)(const char*)>(Utils::PatternScan(GetModuleHandleA("client.dll"), "55 8B EC 83 E4 F8 8B 4D 08 BA ? ? ? ? E8 ? ? ? ? 85 C0 75 12"));
+		if (g_Options.misc_autoaccept)
+		{
+			if (!strcmp(pSoundEntry, "UIPanorama.popup_accept_match_beep")) {
+				static auto fnAccept = (void(*)())(Utils::PatternScan(GetModuleHandleA("client.dll"), "55 8B EC 83 E4 F8 8B 4D 08 BA ? ? ? ? E8 ? ? ? ? 85 C0 75 12"));
 
-			if (fnAccept) {
-
-				fnAccept("");
+				fnAccept();
 
 				//This will flash the CSGO window on the taskbar
 				//so we know a game was found (you cant hear the beep sometimes cause it auto-accepts too fast)

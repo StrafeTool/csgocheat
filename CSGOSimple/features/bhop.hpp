@@ -7,4 +7,5 @@ namespace BunnyHop
 {
     void OnCreateMove(CUserCmd* cmd);
     void AutoStrafe(CUserCmd* cmd);
+    void ragestrafer(CUserCmd* cmd);
 }

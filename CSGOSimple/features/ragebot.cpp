@@ -78,6 +78,10 @@ void RageAimbot::EndEnginePred()
 	g_GlobalVars->frametime = flOldFrametime;
 }
 
+
+
+
+
 bool RageAimbot::Hitchance(C_BaseCombatWeapon* weapon, QAngle angles, C_BasePlayer* ent, float chance) //pasted
 {
 	Vector forward, right, up;
@@ -209,56 +213,102 @@ float GetLerpTime()
 
 	return std::max(lerp, (ratio / ud_rate));
 }
-bool IsTickValid(float SimulationTime, float MaxTime)
+
+bool IsTickValid(int tick, CUserCmd* cmd) // gucci i think cant remember
 {
-	INetChannelInfo* NetChannelInfo = g_EngineClient->GetNetChannelInfo();
-	if (!NetChannelInfo) return true;
-	float Correct = 0;
-	Correct += NetChannelInfo->GetLatency(FLOW_OUTGOING);
-	Correct += NetChannelInfo->GetLatency(FLOW_INCOMING);
-	Correct += GetLerpTime();
+	auto nci = g_EngineClient->GetNetChannelInfo();
 
-	std::clamp(Correct, 0.f, g_CVar->FindVar("sv_maxunlag")->GetFloat());
-
-	float DeltaTime = Correct - (g_GlobalVars->curtime - SimulationTime);
-
-	float TimeLimit = MaxTime;
-	std::clamp(TimeLimit, 0.001f, 0.2f);
-
-	if (fabsf(DeltaTime) > TimeLimit/*float(Variables.LegitBacktrackDuration) / 1000.f  0.2f*/)
+	if (!nci)
 		return false;
 
-	return true;
+	auto PredictedCmdArrivalTick = cmd->tick_count + 1 + TIME_TO_TICKS(nci->GetAvgLatency(FLOW_INCOMING) + nci->GetAvgLatency(FLOW_OUTGOING));
+	auto Correct = std::clamp(GetLerpTime() + nci->GetLatency(FLOW_OUTGOING), 0.f, 1.f) - TICKS_TO_TIME(PredictedCmdArrivalTick + TIME_TO_TICKS(GetLerpTime()) - (tick + TIME_TO_TICKS(GetLerpTime())));
+
+	return (abs(Correct) <= 0.2f);
 }
 
 
 
 
-
-
-void RageAimbot::StoreRecords()
+void RageAimbot::StoreRecords2(C_BasePlayer* ent)
 {
+	PlayerRecords Setup;
+	static float ShotTime[65];
+	static float OldSimtime[65];
+	
 	for (int i = 1; i <= 64; i++)
 	{
 		C_BasePlayer* Player = C_BasePlayer::GetPlayerByIndex(i);
-		if (!Player ||
-			Player->IsDormant() ||
-			!Player->IsPlayer() ||
-			!Player->IsAlive() ||
-			!Player->IsEnemy())
+		if (ent != g_LocalPlayer)
+			ent->FixSetupBones(Matrix[ent->EntIndex()]);
+
+		if (BacktrackRecords[i].size() > 0)
 		{
-			if (BacktrackRecords[i].size() > 0)
-				for (int Tick = 0; Tick < BacktrackRecords[i].size(); Tick++)
-					BacktrackRecords[i].erase(BacktrackRecords[i].begin() + Tick);
-			continue;
+			Setup.Velocity = abs(ent->m_vecVelocity().Length2D());
+			Setup.SimTime = ent->m_flSimulationTime();
+			memcpy(Setup.Matrix, Matrix[ent->EntIndex()], (sizeof(matrix3x4_t) * 128));
+			Setup.Shot = false;
+			BacktrackRecords[ent->EntIndex()].push_back(Setup);
+		}
+		if (OldSimtime[ent->EntIndex()] != ent->m_flSimulationTime())
+		{
+			Setup.Velocity = abs(ent->m_vecVelocity().Length2D());
+
+			Setup.SimTime = ent->m_flSimulationTime();
+
+			Setup.m_vecAbsOrigin = ent->GetAbsOrigin();
+
+			if (ent == g_LocalPlayer)
+				ent->FixSetupBones(Matrix[ent->EntIndex()]);
+
+			memcpy(Setup.Matrix, Matrix[ent->EntIndex()], (sizeof(matrix3x4_t) * 128));
+
+			
+
+			BacktrackRecords[ent->EntIndex()].push_back(Setup);
+
+			OldSimtime[ent->EntIndex()] = ent->m_flSimulationTime();
 		}
 
-		BacktrackRecords[i].insert(BacktrackRecords[i].begin(), TickInfo(Player));
-		for (auto Tick : BacktrackRecords[i])
-			if (!IsTickValid(Tick.SimulationTime, 0.2f))
-				BacktrackRecords[i].pop_back();
+	}
+
+}
+void RageAimbot::ClearRecords(int i)
+{
+	if (BacktrackRecords[i].size() > 0)
+	{
+		for (int tick = 0; tick < BacktrackRecords[i].size(); tick++)
+		{
+			BacktrackRecords[i].erase(BacktrackRecords[i].begin() + tick);
+		}
 	}
 }
+
+
+
+//void RageAimbot::StoreRecords()
+//{
+//	for (int i = 1; i <= 64; i++)
+//	{
+//		C_BasePlayer* Player = C_BasePlayer::GetPlayerByIndex(i);
+//		if (!Player ||
+//			Player->IsDormant() ||
+//			!Player->IsPlayer() ||
+//			!Player->IsAlive() ||
+//			!Player->IsEnemy())
+//		{
+//			if (BacktrackRecords[i].size() > 0)
+//				for (int Tick = 0; Tick < BacktrackRecords[i].size(); Tick++)
+//					BacktrackRecords[i].erase(BacktrackRecords[i].begin() + Tick);
+//			continue;
+//		}
+//
+//		BacktrackRecords[i].insert(BacktrackRecords[i].begin(), TickInfo(Player));
+//		for (auto Tick : BacktrackRecords[i])
+//			if (!IsTickValid(Tick.SimulationTime, 0.2f))
+//				BacktrackRecords[i].pop_back();
+//	}
+//}
 float Hitchance2(C_BaseCombatWeapon* Weapon)
 // coz i need to restore shit for the proper hitchance to work with backtrack
 {
@@ -274,6 +324,8 @@ float Hitchance2(C_BaseCombatWeapon* Weapon)
 	}
 	return Hitchance;
 }
+
+
 
 void RageAimbot::Autostop(CUserCmd* cmd)
 {
@@ -307,86 +359,34 @@ void RageAimbot::Autostop(CUserCmd* cmd)
 
 void RageAimbot::Do(CUserCmd* cmd, C_BaseCombatWeapon* Weapon, bool& bSendPacket)
 {
-	if (!g_EngineClient->IsConnected() && g_EngineClient->IsInGame())
-		return;
-	if (!g_LocalPlayer ||
-		!g_LocalPlayer->IsAlive() ||
-		!Weapon ||
-		Weapon->IsKnife() ||
-		Weapon->IsGrenade() ||
-		!g_Options.rage_enable)
-		return;
-
-	int BestTargetIndex = -1;
-	float BestTargetDistance = FLT_MAX;
-	float BestTargetSimtime = 0.f;
-	Vector Hitbox = Vector{};
-
-	bool Backtrack = false;
-
-	for (int i = 1; i <= 64; i++)
+	for (int i = 1; i <= g_EngineClient->GetMaxClients(); ++i)
 	{
-		C_BasePlayer* Player = C_BasePlayer::GetPlayerByIndex(i);
-		if (!Player ||
-			!Player->IsPlayer() ||
-			Player->IsDormant() ||
-			!Player->IsAlive() ||
-			!Player->IsEnemy() ||
-			BacktrackRecords[i].size() < 1)
+		C_BasePlayer* Players = C_BasePlayer::GetPlayerByIndex(i);
+		if (!g_EngineClient->IsConnected() && g_EngineClient->IsInGame())
+			return;
+		if (!g_LocalPlayer ||
+			!g_LocalPlayer->IsAlive() ||
+			!Weapon ||
+			Weapon->IsKnife() ||
+			Weapon->IsGrenade() ||
+			!g_Options.rage_enable)
+		{
+			ClearRecords(i);
+		}
+		return;
+		StoreRecords2(Players);
+		EnemyEyeAngs[i] = Players->eyeangles();
+
+		if (BacktrackRecords[i].size() == 0 || !g_LocalPlayer->IsAlive())
 			continue;
 
 
-		float PlayerDistance = Math::VectorDistance(g_LocalPlayer->m_vecOrigin(), Player->m_vecOrigin());
-		if (BestTargetDistance > PlayerDistance)
-		{
-			if (BacktrackRecords[i].front().MatrixBuilt && BacktrackRecords[i].front().BoneMatrix != nullptr &&
-				Hitscan(Player, Hitbox, false, BacktrackRecords[i].front().BoneMatrix))
-			{
-				BestTargetDistance = PlayerDistance;
-				BestTargetIndex = i;
-				BestTargetSimtime = Player->m_flSimulationTime();
-				Backtrack = false;
-			}
-			else if (BacktrackRecords[i].back().MatrixBuilt && BacktrackRecords[i].back().BoneMatrix != nullptr &&
-				Hitscan(Player, Hitbox, true, BacktrackRecords[i].back().BoneMatrix))
-			{
-				BestTargetDistance = PlayerDistance;
-				BestTargetIndex = i;
-				BestTargetSimtime = BacktrackRecords[i].back().SimulationTime;
-				Backtrack = true;
-			}
-		}
-	}
-	if (BestTargetIndex != -1 && Hitbox.IsValid() && BestTargetSimtime)
-	{
-		C_BasePlayer* Target = C_BasePlayer::GetPlayerByIndex(BestTargetIndex);
-		if (!Target) return;
+		if (!g_LocalPlayer->m_hActiveWeapon() || Weapon->IsGrenade())
+			continue;
 
-	
-		QAngle AimAngle = Math::CalcAngle(g_LocalPlayer->GetEyePos(), Hitbox);
-		AimAngle -= g_LocalPlayer->m_aimPunchAngle() * g_CVar->FindVar("weapon_recoil_scale")->GetFloat();
-		Math::Normalize3(AimAngle);
-		Math::ClampAngles(AimAngle);
+		bestdamage = 0;
 
-		cmd->viewangles = AimAngle;
+	//	Vector Hitbox = Hitscan(Players);
 
-
-
-		if (Hitchance(Weapon, cmd->viewangles, Target, float(g_Options.RageAimbotHitchance)) ||
-			Backtrack && g_Options.RageAimbotHitchance * 1.5 <= Hitchance2(Weapon) ||
-			g_Options.RageAimbotHitchance == 0)
-		{
-			if (!(cmd->buttons & IN_ATTACK) && Weapon->CanFire())
-			{
-				bSendPacket = true;
-				cmd->tick_count = TIME_TO_TICKS(BestTargetSimtime + GetLerpTime());
-				cmd->buttons |= IN_ATTACK;
-			}
-		}
-		
-		else if (!(Hitchance(Weapon, cmd->viewangles, Target, float(g_Options.RageAimbotHitchance))  || g_Options.RageAimbotHitchance == 0 && g_LocalPlayer->m_vecVelocity().Length() >= .3f && !GetAsyncKeyState(VK_SPACE)))
-		{
-			Autostop(cmd);
-		}
 	}
 }

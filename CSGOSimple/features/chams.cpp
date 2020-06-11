@@ -5,7 +5,7 @@
 #include "../options.hpp"
 #include "../hooks.hpp"
 #include "../helpers/input.hpp"
-
+#include "../backtrack.hpp"
 
 Chams::Chams() {
 	materialRegular = g_MatSystem->FindMaterial("debug/debugambientcube");
@@ -84,17 +84,38 @@ void Chams::OnDrawModelExecute(
 				OverrideMaterial(true, g_Options.chams_player_flat, g_Options.chams_player_wireframe,	false, clr_back);
 				fnDME(g_MdlRender, 0, ctx, state, info, matrix);
 				OverrideMaterial(false,g_Options.chams_player_flat, g_Options.chams_player_wireframe, false,clr_front);
+
+				
+	
+
 			}
 			else {
-				OverrideMaterial(
-					false,
-					g_Options.chams_player_flat,
-					g_Options.chams_player_wireframe,
-					g_Options.chams_player_glass,
-					clr_front);
+				OverrideMaterial(false,g_Options.chams_player_flat,g_Options.chams_player_wireframe, g_Options.chams_player_glass, clr_front);
 			}
+			if (g_Options.chams_player_backtrack)
+			{
+
+				for (int t = 0; t < LegitBacktrack::Get().BacktrackRecords[info.entity_index].size(); t++)
+				{
+					if (!LegitBacktrack::Get().BacktrackRecords[info.entity_index].at(t).MatrixBuilt
+						|| !LegitBacktrack::Get().BacktrackRecords[info.entity_index].at(t).BoneMatrix)
+						continue;
+					
+					g_RenderView->SetColorModulation(255, 255, 255);
+					g_RenderView->SetBlend(float(120.f));
+					g_MdlRender->ForcedMaterialOverride(materialFlat);
+					fnDME(g_MdlRender, 0, ctx, state, info, LegitBacktrack::Get().BacktrackRecords[info.entity_index].back().BoneMatrix);
+
+					/*OverrideMaterial(false, g_Options.chams_player_flat, g_Options.chams_player_wireframe, false, clr_back);
+					fnDME(g_MdlRender, 0, ctx, state, info, LegitBacktrack::Get().BacktrackRecords[info.entity_index].back().BoneMatrix);*/
+				}
+			}
+
+
 		}
+		
 	}
+
 	else if (is_sleeve && g_Options.chams_arms_enabled) {
 		auto material = g_MatSystem->FindMaterial(mdl->szName, TEXTURE_GROUP_MODEL);
 		if (!material)

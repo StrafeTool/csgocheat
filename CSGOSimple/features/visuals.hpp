@@ -57,11 +57,13 @@ public:
 		void RenderWeaponName();
 		void RenderHealth();
 		void RenderArmour();
+		void renderammo();
 		void RenderSnapline();
 	};
 	void NightMode();
 	void ScopeLine();
 	void Spectators();
+	void CrosshairRecoil();
 	void RenderCrosshair();
 	void RenderWeapon(C_BaseCombatWeapon* ent);
 	void RenderDefuseKit(C_BaseEntity* ent);

@@ -5,7 +5,7 @@
 #include "../helpers/utils.hpp"
 #include "../singleton.hpp"
 #include "../helpers/input.hpp"
-
+#include <deque>
 
 class MovementFix : public Singleton<MovementFix>
 {
@@ -16,6 +16,15 @@ public:
 private:
 	float m_oldforward, m_oldsidemove;
 	QAngle m_oldangle;
+};
+
+struct PlayerRecords
+{
+	matrix3x4_t Matrix[128];
+	float Velocity;
+	float SimTime;
+	bool Shot;
+	Vector m_vecAbsOrigin;
 };
 
 class RageAimbot :
@@ -42,15 +51,23 @@ private:
 		float SimulationTime;
 		Vector Origin;
 		bool MatrixBuilt;
+	
 		matrix3x4_t BoneMatrix[128];
 	};
 	bool Hitscan(C_BasePlayer* Player, Vector& HitboxPos, bool Backtrack, matrix3x4_t* BoneMatrix);
+	void StoreRecords(const ClientFrameStage_t stage);
 	bool Hitchance(C_BaseCombatWeapon* weapon, QAngle angles, C_BasePlayer* ent, float chance);
+	Vector         EnemyEyeAngs[65];
 public:
+	float bestdamage;
 	void StoreRecords();
-	std::vector<TickInfo> BacktrackRecords[65];
+	void StoreRecords2(C_BasePlayer* ent);
+	void ClearRecords(int i);
+	//std::vector<TickInfo> BacktrackRecords[65];
+	std::deque<PlayerRecords> BacktrackRecords[65] = {  };
 	void StartEnginePred(CUserCmd* cmd);
 	void EndEnginePred();
+	matrix3x4_t Matrix[65][128];
 	void Autostop(CUserCmd* cmd);
 	void Do(CUserCmd* cmd, C_BaseCombatWeapon* Weapon, bool& bSendPacket);
 	void DoAntiaim(CUserCmd* cmd, C_BaseCombatWeapon* Weapon, bool& bSendPacket);

@@ -42,6 +42,31 @@ bool C_BaseEntity::IsDefuseKit()
 {
 	return GetClientClass()->m_ClassID == ClassId_CBaseAnimating;
 }
+//
+//bool C_BaseEntity::IsNade()
+//{
+//	C_BaseCombatWeapon* pWeapon = (C_BaseCombatWeapon*)this->acti();
+//
+//	if (!pWeapon)
+//		return false;
+//
+//	std::string WeaponName = pWeapon->GetName();
+//
+//	if (WeaponName == "weapon_incgrenade")
+//		return true;
+//	else if (WeaponName == "weapon_decoy")
+//		return true;
+//	else if (WeaponName == "weapon_flashbang")
+//		return true;
+//	else if (WeaponName == "weapon_hegrenade")
+//		return true;
+//	else if (WeaponName == "weapon_smokegrenade")
+//		return true;
+//	else if (WeaponName == "weapon_molotov")
+//		return true;
+//
+//	return false;
+//}
 
 CCSWeaponInfo* C_BaseCombatWeapon::GetCSWeaponData()
 {
@@ -317,6 +342,36 @@ Vector C_BasePlayer::GetHitboxPos(int hitbox_id)
 		}
 	}
 	return Vector{};
+}
+void C_BaseEntity::FixSetupBones(matrix3x4_t* Matrix) { // i took out alot of stuff from here because b1g secrets
+
+	static int m_fFlags = NetvarSys::Get().GetOffset("DT_BasePlayer", "m_fFlags");
+	static int m_nForceBone = NetvarSys::Get().GetOffset("DT_BaseAnimating", "m_nForceBone");
+
+
+	if (this == g_LocalPlayer)
+	{
+		const auto Backup = *(int*)(uintptr_t(this) + ptrdiff_t(0x272));
+
+		*(int*)(uintptr_t(this) + ptrdiff_t(0x272)) = -1;
+
+		this->SetupBones(Matrix, 126, 0x00000100 | 0x200, g_GlobalVars->curtime);
+
+		*(int*)(uintptr_t(this) + ptrdiff_t(0x272)) = Backup;
+	}
+	else
+	{
+		*reinterpret_cast<int*>(uintptr_t(this) + 0xA30) = g_GlobalVars->framecount;
+		*reinterpret_cast<int*>(uintptr_t(this) + 0xA28) = 0;
+
+		const auto Backup = *(int*)(uintptr_t(this) + ptrdiff_t(0x272));
+
+		*(int*)(uintptr_t(this) + ptrdiff_t(0x272)) = -1;
+
+		this->SetupBones(Matrix, 126, 0x00000100 | 0x200, g_GlobalVars->curtime);
+
+		*(int*)(uintptr_t(this) + ptrdiff_t(0x272)) = Backup;
+	}
 }
 
 mstudiobbox_t* C_BasePlayer::GetHitbox(int hitbox_id)
