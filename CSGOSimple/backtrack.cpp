@@ -156,7 +156,7 @@ void LegitBacktrack::Do(CUserCmd* cmd)
 
 		BacktrackRecords[i].insert(BacktrackRecords[i].begin(), TickInfo(Player));
 		for (auto Tick : BacktrackRecords[i])
-			if (!IsTickValids(Tick.SimulationTime, float(200.f) / 1000.f))
+			if (!IsTickValids(Tick.SimulationTime, float(160.f) / 1000.f))
 				BacktrackRecords[i].pop_back();
 
 		Vector ViewAngles;

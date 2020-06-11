@@ -286,8 +286,8 @@ void RenderEmptyTab()
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
 	ImGui::PopStyleVar();
 
-    ImGui::Checkbox("backtrack", g_Options.misc_triggerbot);
-    //ImGui::Checkbox("Lagcomp", g_Options.misc_backtrack);
+
+;
     ImGui::Checkbox("autoshoot", g_Options.legit_autofire);
   /*  if (g_Options.misc_backtrack)
         ImGui::SliderInt("", g_Options.misc_backtrack_slider, 0, 12);*/
@@ -396,26 +396,54 @@ void Menu::Render()
         ImGui::PopStyleVar();
         if (active_tab == 0) // Legit
         {
-            ImGui::BeginGroupBox("##body_content");
+            ImGui::BeginGroupBox("main");
             {
-                ImGui::Text("Legit Features!");
+                //ImGui::Text("Legit");
+                ImGui::Checkbox("enable", g_Options.legit_enable);
+                ImGui::Checkbox("Lagcomp", g_Options.misc_backtrack);
+                ImGui::Text("fov");
+                ImGui::SliderFloat("    ", g_Options.legit_fov, 0, 180, "%.1f");
+                ImGui::Text("rcs");
+                ImGui::SliderInt("      ", g_Options.LegitAimbotRcs, 0, 100, "%d");
+                ImGui::Text("smooth");
+                ImGui::SliderInt("        ", g_Options.LegitAimbotSmooth, 0, 50, "%d");
             }
             ImGui::EndGroupBox();
 
         }
         else if (active_tab == 1) // Visual
         {
-            ImGui::BeginGroupBox("##body_content");
+            ImGui::BeginGroupBox("main");
             {
-                ImGui::Text("Visual Features!");
+                ImGui::Checkbox("Chams", g_Options.chams_player_enabled);
+                if (g_Options.chams_player_enabled)
+                {
+                    ImGui::Checkbox("IgnoreZ", g_Options.chams_player_ignorez);
+                    //   ImGui::Checkbox("btchams", g_Options.chams_player_backtrack);
+
+                }
+                ImGui::Checkbox("Glow", g_Options.glow_players);
+                ImGui::Checkbox("ESP", g_Options.esp_player_boxes);
+                ImGui::Checkbox("EspOnDeath", g_Options.misc_espdeath);
+                ImGui::Checkbox("NadePredict", g_Options.misc_grenadepreview);
+                ImGui::Checkbox("NightMode", g_Options.misc_nightmode);
+                ImGui::Checkbox("crosshair", g_Options.esp_crosshair);
+                ImGui::Checkbox("BulletBeams", g_Options.misc_bulletbeams);
             }
             ImGui::EndGroupBox();
         }
         else if (active_tab == 2) // Misc
         {
-            ImGui::BeginGroupBox("##body_content");
+            ImGui::BeginGroupBox("main");
             {
-                ImGui::Text("Misc Features!");
+   
+                //   ImGui::Checkbox("AutoAccept", g_Options.misc_autoaccept);
+                ImGui::Checkbox("BunnyHop", g_Options.misc_bhop);
+                ImGui::Checkbox("FakeLag", g_Options.misc_fakelag);
+                ImGui::Checkbox("ViewModel", g_Options.viewmodel_fov);
+                ImGui::Checkbox("ThirdPerson", g_Options.misc_thirdperson);
+                ImGui::Checkbox("RemoveScope", g_Options.misc_removezoom);
+                ImGui::Checkbox("HitMarker", g_Options.misc_hitmarker);
             }
             ImGui::EndGroupBox();
         }

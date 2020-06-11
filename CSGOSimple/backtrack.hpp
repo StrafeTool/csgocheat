@@ -7,7 +7,7 @@
 #include "valve_sdk/math/Vector.hpp"
 #include "valve_sdk/math/VMatrix.hpp"
 
-#define NUM_OF_TICKS 12
+#define NUM_OF_TICKS 26 
 
 struct StoredData
 {

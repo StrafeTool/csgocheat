@@ -90,7 +90,7 @@ void HitMarkerEvent::Paint(void)
 			screenCenterX = screenSizeX / 2;
 			screenCenterY = screenSizeY / 2;
 
-			int lineSize = 8;
+			int lineSize = 9;
 			g_VGuiSurface->DrawSetColor(Color(200, 200, 190, (int)(alpha * 255.f)));
 			g_VGuiSurface->DrawLine(screenCenterX - lineSize, screenCenterY - lineSize, screenCenterX - (lineSize / 4), screenCenterY - (lineSize / 4));
 			g_VGuiSurface->DrawLine(screenCenterX - lineSize, screenCenterY + lineSize, screenCenterX - (lineSize / 4), screenCenterY + (lineSize / 4));
