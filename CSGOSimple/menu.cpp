@@ -114,10 +114,9 @@ void RenderEspTab()
     auto& style = ImGui::GetStyle();
     float group_w = ImGui::GetCurrentWindow()->Size.x - style.WindowPadding.x * 2;
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
-    {
-        render_tabs(esp_tab_names, active_esp_tab, group_w / _countof(esp_tab_names), 25.0f, true);
-    }
+    render_tabs(esp_tab_names, active_esp_tab, group_w / _countof(esp_tab_names), 25.0f, true);
     ImGui::PopStyleVar();
+
     ImGui::BeginGroupBox("##body_content");
     {
         if(active_esp_tab == 0) {
@@ -378,59 +377,50 @@ void Menu::Render()
 
     ImGui::SetNextWindowPos(ImVec2{ 0, 0 }, ImGuiSetCond_Once);
     ImGui::SetNextWindowSize(ImVec2{ 390, 280 }, ImGuiSetCond_Once);
-
     if (ImGui::Begin(" ",
         &_visible,
         ImGuiWindowFlags_NoCollapse |
         ImGuiWindowFlags_NoResize |
         ImGuiWindowFlags_NoTitleBar)) {
         auto size = ImVec2{ 0.0f, sidebar_size.y };
-        ImGui::BeginChild("Aim", ImVec2(120, 260), true);
-        {
-            ImGui::Text("           Aim");
-            ImGui::Checkbox("enable", g_Options.legit_enable);
-            ImGui::Checkbox("Lagcomp", g_Options.misc_backtrack);
-            ImGui::Text("fov");
-            ImGui::SliderFloat("    ", g_Options.legit_fov, 0, 180, "%.1f");
-            ImGui::Text("rcs");
-            ImGui::SliderInt("      ", g_Options.LegitAimbotRcs, 0, 100,"%d");
-            ImGui::Text("smooth");
-            ImGui::SliderInt("        ", g_Options.LegitAimbotSmooth, 0, 50, "%d");
 
-        }ImGui::EndChild();
-        ImGui::SameLine();
-        ImGui::BeginChild("Visual", ImVec2(120, 260), true);
+        static char* tab_names[] = { "Aim", "Visual", "Misc" };
+        static int   active_tab = 0;
+
+        bool placeholder_true = true;
+
+        auto& style = ImGui::GetStyle();
+        float group_w = ImGui::GetCurrentWindow()->Size.x - style.WindowPadding.x * 2;
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+        render_tabs(tab_names, active_tab, group_w / _countof(tab_names), 25.0f, true);
+        ImGui::PopStyleVar();
+        if (active_tab == 0) // Legit
         {
-            ImGui::Text("           Visual");
-            ImGui::Checkbox("Chams", g_Options.chams_player_enabled);
-            if (g_Options.chams_player_enabled)
+            ImGui::BeginGroupBox("##body_content");
             {
-                ImGui::Checkbox("IgnoreZ", g_Options.chams_player_ignorez);
-             //   ImGui::Checkbox("btchams", g_Options.chams_player_backtrack);
-
+                ImGui::Text("Legit Features!");
             }
-            ImGui::Checkbox("Glow", g_Options.glow_players);
-            ImGui::Checkbox("ESP", g_Options.esp_player_boxes);
-            ImGui::Checkbox("EspOnDeath", g_Options.misc_espdeath);
-            ImGui::Checkbox("NadePredict", g_Options.misc_grenadepreview);
-            ImGui::Checkbox("NightMode", g_Options.misc_nightmode);
-            ImGui::Checkbox("crosshair", g_Options.esp_crosshair);
-            ImGui::Checkbox("BulletBeams", g_Options.misc_bulletbeams);
-        }ImGui::EndChild();
-        ImGui::SameLine();
-        ImGui::BeginChild("Misc", ImVec2(120, 260), true);
+            ImGui::EndGroupBox();
+
+        }
+        else if (active_tab == 1) // Visual
         {
-            ImGui::Text("           Misc");
-         //   ImGui::Checkbox("AutoAccept", g_Options.misc_autoaccept);
-            ImGui::Checkbox("BunnyHop", g_Options.misc_bhop);
-            ImGui::Checkbox("FakeLag", g_Options.misc_fakelag);
-            ImGui::Checkbox("ViewModel", g_Options.viewmodel_fov);
-            ImGui::Checkbox("ThirdPerson", g_Options.misc_thirdperson);
-            ImGui::Checkbox("RemoveScope", g_Options.misc_removezoom);
-            ImGui::Checkbox("HitMarker", g_Options.misc_hitmarker);
-        }ImGui::EndChild();
+            ImGui::BeginGroupBox("##body_content");
+            {
+                ImGui::Text("Visual Features!");
+            }
+            ImGui::EndGroupBox();
+        }
+        else if (active_tab == 2) // Misc
+        {
+            ImGui::BeginGroupBox("##body_content");
+            {
+                ImGui::Text("Misc Features!");
+            }
+            ImGui::EndGroupBox();
+        }
         ImGui::End();
-    }
+    }  
 }
 
 void Menu::Toggle()
@@ -447,22 +437,3 @@ void Menu::CreateStyle()
     _style.ChildRounding = 4.f;
     ImGui::GetStyle() = _style;
 }
-
-//void Menu::CreateStyle()
-//{
-//	ImGui::StyleColorsDark();
-//	ImGui::SetColorEditOptions(ImGuiColorEditFlags_HEX);
-//	_style.FrameRounding = 10.f;
-//	_style.WindowRounding = 10.f;
-//	_style.ChildRounding = 0.f;
-//	_style.Colors[ImGuiCol_Button] = ImVec4(0.25f, 0.3f, 0.35f, 1.0f);
-//	_style.Colors[ImGuiCol_Header] = ImVec4(0.25f, 0.3f, 0.35f, 1.0f);
-//	_style.Colors[ImGuiCol_HeaderHovered] = ImVec4(0.25f, 0.3f, 0.35f, 1.0f);
-//	//_style.Colors[ImGuiCol_ButtonHovered] = ImVec4(0.000f, 0.545f, 1.000f, 1.000f);
-//	//_style.Colors[ImGuiCol_ButtonActive] = ImVec4(0.060f, 0.416f, 0.980f, 1.000f);
-//	_style.Colors[ImGuiCol_FrameBg] = ImVec4(0.2f, 0.25f, 0.3f, 1.0f);
-//	_style.Colors[ImGuiCol_WindowBg] = ImVec4(0.2f, 0.25f, 0.3f, 1.0f);
-//	_style.Colors[ImGuiCol_PopupBg] = ImVec4(0.2f, 0.25f, 0.3f, 1.0f);
-//	ImGui::GetStyle() = _style;
-//}
-
