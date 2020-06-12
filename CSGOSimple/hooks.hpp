@@ -19,12 +19,16 @@ namespace index
 	constexpr auto SvCheatsGetBool          = 13;
 	constexpr auto OverrideView             = 18;
 	constexpr auto LockCursor               = 67;
+	constexpr auto WriteUserCmdDeltaToBuffer = 24;
+	
+
 }
 
 namespace Hooks
 {
     void Initialize();
     void Shutdown();
+
 
     inline vfunc_hook hlclient_hook;
 	inline vfunc_hook direct3d_hook;

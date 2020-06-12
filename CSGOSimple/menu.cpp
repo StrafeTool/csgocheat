@@ -376,7 +376,7 @@ void Menu::Render()
     static int active_sidebar_tab = 0;
 
     ImGui::SetNextWindowPos(ImVec2{ 0, 0 }, ImGuiSetCond_Once);
-    ImGui::SetNextWindowSize(ImVec2{ 400, 280 }, ImGuiSetCond_Once);
+    ImGui::SetNextWindowSize(ImVec2{ 410, 280 }, ImGuiSetCond_Once);
     if (ImGui::Begin(" ",
         &_visible,
         ImGuiWindowFlags_NoCollapse |
@@ -400,7 +400,58 @@ void Menu::Render()
         {
             ImGui::BeginGroupBox("Coming soon");
             {
-                
+                ImGui::BeginChild("Aim", ImVec2(117, 220), true);
+                {
+                    ImGui::Checkbox("renable", g_Options.rage_enable);
+                  
+                    ImGui::Text("hitchance");
+                    ImGui::SliderFloat("##hitchance", g_Options.RageAimbotHitchance, 0, 100);
+                    ImGui::Text("mindmg");
+                    ImGui::SliderFloat("##mindmg", g_Options.RageAimbotMinDmg, 0, 120);
+                    if (g_Options.RageAimbotHead)
+                    {
+                        ImGui::Text("head scale");
+                        ImGui::SliderInt("##headscale", g_Options.RageAimbotHeadScale, 0, 100);
+                    }
+                    if (g_Options.RageAimbotBody)
+                    {
+                        ImGui::Text("body scale");
+                        ImGui::SliderInt("##bodyscale", g_Options.RageAimbotBodyScale, 0, 100);
+                    }
+                 
+             
+                }ImGui::EndChild();
+                ImGui::SameLine();
+                ImGui::BeginChild("aim2", ImVec2(127, 220), true);
+                {
+                    ImGui::Checkbox("silent", g_Options.rage_silent);
+                    ImGui::Checkbox("safepoint", g_Options.RageAimbotSafePoint);
+                    ImGui::Checkbox("head", g_Options.RageAimbotHead);
+                    ImGui::Checkbox("body", g_Options.RageAimbotBody);
+                    ImGui::Checkbox("legs", g_Options.RageAimbotLegs);
+                    ImGui::Checkbox("toes", g_Options.RageAimbotToes);                    
+                    ImGui::Checkbox("delay shot", g_Options.RageAimbotDelayShot);
+                    ImGui::Text("baim after");
+                    ImGui::SliderInt("##baimafter", g_Options.RageAimbotBaimAfter, 0, 20);
+                   
+                   
+
+
+                }ImGui::EndChild();
+                ImGui::SameLine();
+                ImGui::BeginChild("Aim3", ImVec2(127, 220), true);
+                { 
+                    ImGui::Checkbox("resolver", g_Options.RageAimbotResolver);
+                    ImGui::Checkbox("hideshot", g_Options.hideshots);
+                    ImGui::Checkbox("doubletap", g_Options.doubletap);
+                    ImGui::Checkbox("antiaim", g_Options.RageAntiaimEnabled);
+                    ImGui::Checkbox("FakeLag", g_Options.misc_fakelag);
+                    ImGui::SliderInt("##baimafter ", g_Options.misc_fakelagammount, 0, 14, "%d");
+
+
+
+                }ImGui::EndChild();
+
             }
             ImGui::EndGroupBox();
         }
@@ -411,7 +462,7 @@ void Menu::Render()
             {
                 //ImGui::Text("Legit");
 
-                ImGui::BeginChild("Aim", ImVec2(115, 210), true);
+                ImGui::BeginChild("Aim", ImVec2(127, 220), true);
                 {
 
                     ImGui::Checkbox("enable", g_Options.legit_enable);
@@ -427,7 +478,7 @@ void Menu::Render()
                 }
                 ImGui::EndChild();
                 ImGui::SameLine();
-                ImGui::BeginChild("misc", ImVec2(115, 210), true);
+                ImGui::BeginChild("misc", ImVec2(127, 220), true);
                 {
 
                     ImGui::Text("test");
@@ -435,7 +486,7 @@ void Menu::Render()
                 }
                 ImGui::EndChild();
                 ImGui::SameLine();
-                ImGui::BeginChild("lmao", ImVec2(115, 210), true);
+                ImGui::BeginChild("lmao", ImVec2(127, 220), true);
                 {
                     ImGui::Text("test");
              
@@ -449,7 +500,7 @@ void Menu::Render()
         {
             ImGui::BeginGroupBox("main");
             {
-                ImGui::BeginChild("main", ImVec2(115, 210), true);
+                ImGui::BeginChild("main", ImVec2(127, 220), true);
                 {
 
 
@@ -461,6 +512,7 @@ void Menu::Render()
                         ImGui::Checkbox("IgnoreZ", g_Options.chams_player_ignorez);
                         ImGui::SameLine();
                         ImGuiEx::ColorEdit4("##xqzcolor", g_Options.color_chams_player_enemy_occluded, ImGuiColorEditFlags_NoInputs);
+                        ImGui::Checkbox("backtrack", g_Options.chams_player_backtrack);
                         //   ImGui::Checkbox("btchams", g_Options.chams_player_backtrack);
 
                     }
@@ -471,18 +523,21 @@ void Menu::Render()
 
                 }ImGui::EndChild();
                 ImGui::SameLine();
-                ImGui::BeginChild("misc", ImVec2(115, 210), true);
+                ImGui::BeginChild("misc", ImVec2(127, 220), true);
                 {
                     ImGui::Checkbox("EspOnDeath", g_Options.misc_espdeath);
+                    ImGui::Checkbox("NightMode", g_Options.misc_nightmode);
+                    ImGui::Checkbox("crosshair", g_Options.esp_crosshair);
+                    ImGui::Checkbox("Remove smoke", g_Options.misc_nosmoke);
+                  
+
 
                 }ImGui::EndChild();
                 ImGui::SameLine();
-                ImGui::BeginChild("other", ImVec2(115, 210), true);
+                ImGui::BeginChild("other", ImVec2(127, 220), true);
                 {
                  
                     ImGui::Checkbox("NadePredict", g_Options.misc_grenadepreview);
-                    ImGui::Checkbox("NightMode", g_Options.misc_nightmode);
-                    ImGui::Checkbox("crosshair", g_Options.esp_crosshair);
                     ImGui::Checkbox("BulletBeams", g_Options.misc_bulletbeams);
                 }ImGui::EndChild();
             }
@@ -492,23 +547,47 @@ void Menu::Render()
         {
             ImGui::BeginGroupBox("main");
             {
-   
-                //   ImGui::Checkbox("AutoAccept", g_Options.misc_autoaccept);
-                ImGui::Checkbox("BunnyHop", g_Options.misc_bhop);
-                ImGui::Checkbox("FakeLag", g_Options.misc_fakelag);
-                ImGui::Checkbox("ViewModel", g_Options.viewmodel_fov);
-                ImGui::Checkbox("ThirdPerson", g_Options.misc_thirdperson);
-                ImGui::Checkbox("RemoveScope", g_Options.misc_removezoom);
-                ImGui::Checkbox("HitMarker", g_Options.misc_hitmarker);
+                ImGui::BeginChild("misc", ImVec2(127, 220), true);
+                {
+           
+                    ImGui::Checkbox("BunnyHop", g_Options.misc_bhop);
+                    if (g_Options.misc_bhop) {
+                        ImGui::Text("Hitchance");
+                        ImGui::SliderInt("", g_Options.misc_bhop_hitchance, 0, 100);
+                        ImGui::Text("Max Jumps");
+                        ImGui::SliderInt(" ", g_Options.misc_bhop_max, 0, 10);
+                        ImGui::Text("Max Failed Jumps");
+                        ImGui::SliderInt("   ", g_Options.misc_bhop_maxfailed, 0, 10);
+                    }
+                    
+                }ImGui::EndChild();
+                ImGui::SameLine();
+                ImGui::BeginChild("misc1", ImVec2(127, 220), true);
+                {
+                    ImGui::Checkbox("ViewModel", g_Options.viewmodel_fov);
+                    ImGui::Checkbox("ThirdPerson", g_Options.misc_thirdperson);
+                    ImGui::Checkbox("RemoveScope", g_Options.misc_removezoom);
+                    ImGui::Checkbox("HitMarker", g_Options.misc_hitmarker);
+
+                }ImGui::EndChild();
+                ImGui::SameLine();
+                ImGui::BeginChild("misc2", ImVec2(127, 220), true);
+                {
+
+                    if (ImGui::Button("Save cfg")) {
+                        Config::Get().Save();
+                    }
+                    if (ImGui::Button("Load cfg")) {
+                        Config::Get().Load();
+                    }
+
+                }ImGui::EndChild();
+               
+               
 
 
 
-                if (ImGui::Button("Save cfg")) {
-                    Config::Get().Save();
-                }
-                if (ImGui::Button("Load cfg")) {
-                    Config::Get().Load();
-                }
+           
             }
             ImGui::EndGroupBox();
         }

@@ -4,39 +4,43 @@
 
 void BunnyHop::OnCreateMove(CUserCmd* cmd)
 {
-  static bool jumped_last_tick = false;
-  static bool should_fake_jump = false;
+    static int hops_restricted = 0;
+    static int hops_hit = 0;
 
-  if (!g_LocalPlayer)
-	  return;
+    if (!g_LocalPlayer)
+        return;
 
-  if (!g_LocalPlayer->IsAlive())
-	  return;
+    if (!g_LocalPlayer->IsAlive())
+        return;
 
-  if (g_LocalPlayer->m_nMoveType() == MOVETYPE_LADDER || g_LocalPlayer->m_nMoveType() == MOVETYPE_NOCLIP)
-	  return;
+    if (g_LocalPlayer->m_nMoveType() == MOVETYPE_LADDER || g_LocalPlayer->m_nMoveType() == MOVETYPE_NOCLIP)
+        return;
 
-  if (g_LocalPlayer->m_fFlags() & FL_INWATER)
-	  return;
- // ragestrafer(cmd);
+    if (g_LocalPlayer->m_fFlags() & FL_INWATER)
+        return;
 
 
-  if(!jumped_last_tick && should_fake_jump) {
-    should_fake_jump = false;
-    cmd->buttons |= IN_JUMP;
-  } else if(cmd->buttons & IN_JUMP) {
-    if(g_LocalPlayer->m_fFlags() & FL_ONGROUND) {
-      jumped_last_tick = true;
-      should_fake_jump = true;
-    } else {
-      cmd->buttons &= ~IN_JUMP;
-      jumped_last_tick = false;
+    if (!(cmd->buttons & IN_JUMP))
+        return;
+
+    if (!(g_LocalPlayer->m_fFlags() & FL_ONGROUND))
+    {
+        cmd->buttons &= ~IN_JUMP;
+        hops_restricted = 0;
     }
-  } else {
-    jumped_last_tick = false;
-    should_fake_jump = false;
-  }
+    else if ((rand() % 100 > g_Options.misc_bhop_hitchance
+        && hops_restricted < g_Options.misc_bhop_maxfailed)
+        || (g_Options.misc_bhop_max > 0
+            && hops_hit > g_Options.misc_bhop_max))
+    {
+        cmd->buttons &= ~IN_JUMP;
+        hops_restricted++;
+        hops_hit = 0;
+    }
+    else
+        hops_hit++;
 }
+
 
 
 void BunnyHop::AutoStrafe(CUserCmd* cmd)
@@ -110,9 +114,9 @@ void BunnyHop::ragestrafer(CUserCmd* cmd)
 
         const auto vel =g_LocalPlayer->m_vecVelocity();
         const float y_vel = RAD2DEG(atan2(vel.y, vel.x));
-        const float diff_ang = (cmd->viewangles.yaw - y_vel); // needs to be normalized
+        const float diff_ang = Math::NormalizeYaw(cmd->viewangles.yaw - y_vel); // needs to be normalized
 
       cmd->sidemove = (diff_ang > 0.0) ? -cl_sidespeed : cl_sidespeed;
-      cmd->viewangles.yaw = (cmd->viewangles.yaw - diff_ang); //normalize here too
+      cmd->viewangles.yaw = Math::NormalizeYaw(cmd->viewangles.yaw - diff_ang); //normalize here too
     }
 }

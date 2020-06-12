@@ -53,6 +53,8 @@ namespace Interfaces
         g_PhysSurface         = get_interface<IPhysicsSurfaceProps>(vphysicsFactory , "VPhysicsSurfaceProps001");
         g_InputSystem         = get_interface<IInputSystem>        (inputSysFactory , "InputSystemVersion001");
 
+        g_pMemAlloc = *(IMemAlloc**)(GetProcAddress(GetModuleHandleW(L"tier0.dll"), "g_pMemAlloc"));
+
         auto client = GetModuleHandleW(L"client.dll");
         auto engine = GetModuleHandleW(L"engine.dll");
         auto dx9api = GetModuleHandleW(L"shaderapidx9.dll");

@@ -21,7 +21,7 @@
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
     <SpectreMitigation>false</SpectreMitigation>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -63,7 +63,7 @@
     <ClCompile>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;CSGOSIMPLE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -103,8 +103,11 @@
     <ClCompile Include="features\autowall.cpp" />
     <ClCompile Include="features\bhop.cpp" />
     <ClCompile Include="features\chams.cpp" />
+    <ClCompile Include="features\engineprediction.cpp" />
+    <ClCompile Include="features\eventlistener.cpp" />
     <ClCompile Include="features\glow.cpp" />
     <ClCompile Include="features\ragebot.cpp" />
+    <ClCompile Include="features\tickbase.cpp" />
     <ClCompile Include="features\triggerbot.cpp" />
     <ClCompile Include="features\visuals.cpp" />
     <ClCompile Include="helpers\input.cpp" />
@@ -142,10 +145,14 @@
     <ClInclude Include="config.hpp" />
     <ClInclude Include="features\antiaim.hpp" />
     <ClInclude Include="features\autowall.h" />
+    <ClInclude Include="features\engineprediction.hpp" />
+    <ClInclude Include="features\eventlistener.hpp" />
     <ClInclude Include="features\ragebot.h" />
+    <ClInclude Include="features\tickbase.h" />
     <ClInclude Include="features\triggerbot.h" />
     <ClInclude Include="fonts\cousine.hpp" />
     <ClInclude Include="fonts\fonts.hpp" />
+    <ClInclude Include="helpers\IMemAlloc.hpp" />
     <ClInclude Include="hitmarker.hpp" />
     <ClInclude Include="imgui\impl\imgui_impl_dx9.h" />
     <ClInclude Include="imgui\impl\imgui_impl_win32.h" />

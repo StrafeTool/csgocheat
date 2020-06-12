@@ -37,7 +37,7 @@ namespace Math
 		}
 		vec[2] = 0.f;
 	}
-
+	float NormalizeYaw(float yaw);
     void ClampAngles(QAngle& angles);
     void VectorTransform(const Vector& in1, const matrix3x4_t& in2, Vector& out);
     void AngleVectors(const QAngle &angles, Vector& forward);

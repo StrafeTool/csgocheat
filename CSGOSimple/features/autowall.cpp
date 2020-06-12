@@ -119,7 +119,7 @@ void Autowall::ClipTraceToPlayers(const Vector& absStart, const Vector absEnd, u
 		return;
 	}
 
-	if (weapon->IsKnifeorNade())
+	if (weapon->IsKnife())
 	{
 		return;
 	}
@@ -232,7 +232,7 @@ void Autowall::ScaleDamage(CGameTrace& enterTrace, CCSWeaponInfo* weaponData, fl
 		return;
 	}
 
-	if (weapon->IsZeus() ||weapon->IsKnifeorNade())
+	if (weapon->IsZeus() ||weapon->IsKnife())
 	{
 		return;
 	}
@@ -692,6 +692,7 @@ float Autowall::CanHit(C_BasePlayer* ent, Vector& point)
 	}
 	return -1.f;
 }
+
 
 bool Autowall::trace_awall(float& damage)
 {

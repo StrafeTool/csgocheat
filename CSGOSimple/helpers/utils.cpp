@@ -223,6 +223,60 @@ namespace Utils {
      *
      * @returns Address of the first occurence
      */
+
+    typedef struct _MODULEINFO {
+        LPVOID lpBaseOfDll;
+        DWORD SizeOfImage;
+        LPVOID EntryPoint;
+    } MODULEINFO, * LPMODULEINFO;
+
+    BOOL
+        WINAPI
+        GetModuleInformation(
+            _In_ HANDLE hProcess,
+            _In_ HMODULE hModule,
+            _Out_ LPMODULEINFO lpmodinfo,
+            _In_ DWORD cb
+        );
+#define INRANGE(x,a,b)   (x >= a && x <= b)
+#define GET_BYTE( x )    (GET_BITS(x[0]) << 4 | GET_BITS(x[1]))
+#define GET_BITS( x )    (INRANGE((x&(~0x20)),'A','F') ? ((x&(~0x20)) - 'A' + 0xa) : (INRANGE(x,'0','9') ? x - '0' : 0))
+    uintptr_t FindSignature(const char* szModule, const char* szSignature)
+    {
+        const char* pat = szSignature;
+        DWORD firstMatch = 0;
+        DWORD rangeStart = reinterpret_cast<DWORD>(GetModuleHandleA(szModule));
+        MODULEINFO miModInfo;
+        GetModuleInformation(GetCurrentProcess(), reinterpret_cast<HMODULE>(rangeStart), &miModInfo, sizeof(MODULEINFO));
+        DWORD rangeEnd = rangeStart + miModInfo.SizeOfImage;
+        for (DWORD pCur = rangeStart; pCur < rangeEnd; pCur++)
+        {
+            if (!*pat)
+                return firstMatch;
+
+            if (*(PBYTE)pat == '\?' || *(BYTE*)pCur == GET_BYTE(pat))
+            {
+                if (!firstMatch)
+                    firstMatch = pCur;
+
+                if (!pat[2])
+                    return firstMatch;
+
+                if (*(PWORD)pat == '\?\?' || *(PBYTE)pat != '\?')
+                    pat += 3;
+
+                else
+                    pat += 2;
+            }
+            else
+            {
+                pat = szSignature;
+                firstMatch = 0;
+            }
+        }
+        return NULL;
+    }
+
     std::uint8_t* PatternScan(void* module, const char* signature)
     {
         static auto pattern_to_byte = [](const char* pattern) {
@@ -268,6 +322,52 @@ namespace Utils {
         return nullptr;
     }
 
+    float GetLerpTime()
+    {
+        int ud_rate = g_CVar->FindVar("cl_updaterate")->GetInt();
+        ConVar* min_ud_rate = g_CVar->FindVar("sv_minupdaterate");
+        ConVar* max_ud_rate = g_CVar->FindVar("sv_maxupdaterate");
+
+        if (min_ud_rate && max_ud_rate)
+            ud_rate = max_ud_rate->GetInt();
+
+        float ratio = g_CVar->FindVar("cl_interp_ratio")->GetFloat();
+
+        if (ratio == 0)
+            ratio = 1.0f;
+
+        float lerp = g_CVar->FindVar("cl_interp")->GetFloat();
+        ConVar* c_min_ratio = g_CVar->FindVar("sv_client_min_interp_ratio");
+        ConVar* c_max_ratio = g_CVar->FindVar("sv_client_max_interp_ratio");
+
+        if (c_min_ratio && c_max_ratio && c_min_ratio->GetFloat() != 1)
+            ratio = std::clamp(ratio, c_min_ratio->GetFloat(), c_max_ratio->GetFloat());
+
+        return std::max(lerp, (ratio / ud_rate));
+    }
+    bool IsTickValid(float SimulationTime, float MaxTime)
+    {
+        INetChannelInfo* NetChannelInfo = g_EngineClient->GetNetChannelInfo();
+        if (!NetChannelInfo) return true;
+        float Correct = 0;
+        Correct += NetChannelInfo->GetLatency(FLOW_OUTGOING);
+        Correct += NetChannelInfo->GetLatency(FLOW_INCOMING);
+        Correct += GetLerpTime();
+
+        std::clamp(Correct, 0.f, g_CVar->FindVar("sv_maxunlag")->GetFloat());
+
+        float DeltaTime = Correct - (g_GlobalVars->curtime - SimulationTime);
+
+        float TimeLimit = MaxTime;
+        //std::clamp(TimeLimit, 0.001f, 0.2f);
+
+        if (fabsf(DeltaTime) > TimeLimit/*float(Variables.LegitBacktrackDuration) / 1000.f  0.2f*/)
+            return false;
+
+        return true;
+    }
+
+
     /*
      * @brief Set player clantag
      *
@@ -295,5 +395,9 @@ namespace Utils {
         static auto do_once = (nameConvar->SetValue("\n���"), true);
 
         nameConvar->SetValue(name);
+    }
+    BOOL __stdcall GetModuleInformation(HANDLE hProcess, HMODULE hModule, LPMODULEINFO lpmodinfo, DWORD cb)
+    {
+        return 0;
     }
 }

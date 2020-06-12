@@ -27,8 +27,7 @@ void TimeWarp::CreateMove(CUserCmd* cmd)
 		if (pEntity->IsDormant()) continue;
 		if (!pEntity->IsAlive()) continue;
 		if (pEntity->m_iTeamNum() == g_LocalPlayer->m_iTeamNum()) continue;
-		if (pEntity != g_LocalPlayer)
-			pEntity->FixSetupBones(Matrixs[pEntity->EntIndex()]);
+	
 
 
 		float simtime = pEntity->m_flSimulationTime();
@@ -194,12 +193,15 @@ void LegitBacktrack::Do(CUserCmd* cmd)
 
 void LegitAimbot::Do(CUserCmd* cmd, C_BaseCombatWeapon* Weapon)
 {
-	LegitBacktrack::Get().Do(cmd);
-	TimeWarp::Get().CreateMove(cmd);
+	if (g_Options.misc_backtrack)
+	{
+		LegitBacktrack::Get().Do(cmd);
+		TimeWarp::Get().CreateMove(cmd);
+	}
 	if (!g_LocalPlayer ||
 		!g_LocalPlayer->IsAlive() ||
 		!Weapon ||
-		Weapon->IsKnifeorNade() ||
+		Weapon->IsKnife() ||
 		!g_Options.legit_enable ||
 		!g_Options.legit_fov)
 		return;

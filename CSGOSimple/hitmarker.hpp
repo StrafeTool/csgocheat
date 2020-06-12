@@ -38,6 +38,8 @@ class BulletImpactEvent : public IGameEventListener2, public Singleton<BulletImp
 {
 public:
 
+	void log_damage(C_BasePlayer* player, int damage, int hitgroup);
+
 	void FireGameEvent(IGameEvent* event);
 	int  GetEventDebugID(void);
 

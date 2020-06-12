@@ -10,7 +10,7 @@
 #include "Math/QAngle.hpp"
 #include "Math/Vector.hpp"
 #include "Misc/Studio.hpp"
-
+#include "../helpers/IMemAlloc.hpp"
 #include "Interfaces/IAppSystem.hpp"
 #include "Interfaces/IBaseClientDll.hpp"
 #include "Interfaces/IClientEntity.hpp"
@@ -83,6 +83,7 @@ inline CClientState*         g_ClientState    = nullptr;
 inline IPhysicsSurfaceProps* g_PhysSurface    = nullptr;
 inline IInputSystem*         g_InputSystem    = nullptr;
 inline IWeaponSystem*        g_WeaponSystem   = nullptr;
+inline IMemAlloc* g_pMemAlloc;
 inline IViewRenderBeams*     g_RenderBeams = nullptr;
 
 template<typename... Args>

@@ -1,8 +1,5 @@
 #include "ragebot.h"
-#include "../hooks.hpp"
 #include "autowall.h"
-float flOldCurtime;
-float flOldFrametime;
 
 void MovementFix::Start(CUserCmd* cmd)
 {
@@ -37,355 +34,945 @@ void MovementFix::End(CUserCmd* cmd)
 	cmd->sidemove = sin(DEG2RAD(yaw_delta)) * m_oldforward + sin(DEG2RAD(yaw_delta + 90.f)) * m_oldsidemove;
 }
 
-void RageAimbot::StartEnginePred(CUserCmd* cmd)
+
+
+
+bool RageAimbot::Hitchance(C_BasePlayer* Player, C_BaseCombatWeapon* pWeapon, QAngle Angle, Vector Point, int Chance)
 {
-	static int nTickBase;
-	static CUserCmd* pLastCmd;
+	static float Seeds = 256.f;
 
-	// fix tickbase if game didnt render previous tick
-	if (pLastCmd)
-	{
-		if (pLastCmd->hasbeenpredicted)
-			nTickBase = g_LocalPlayer->m_nTickBase();
-		else
-			++nTickBase;
-	}
-
-	pLastCmd = cmd;
-	flOldCurtime = g_GlobalVars->curtime;
-	flOldFrametime = g_GlobalVars->frametime;
-
-	g_GlobalVars->curtime = nTickBase * g_GlobalVars->interval_per_tick;
-	g_GlobalVars->frametime = g_GlobalVars->interval_per_tick;
-
-	g_GameMovement->StartTrackPredictionErrors(g_LocalPlayer);
-
-	CMoveData data;
-	memset(&data, 0, sizeof(CMoveData));
-
-	g_MoveHelper->SetHost(g_LocalPlayer);
-	g_Prediction->SetupMove(g_LocalPlayer, cmd, g_MoveHelper, &data);
-	g_GameMovement->ProcessMovement(g_LocalPlayer, &data);
-	g_Prediction->FinishMove(g_LocalPlayer, cmd, &data);
-}
-
-void RageAimbot::EndEnginePred()
-{
-	g_GameMovement->FinishTrackPredictionErrors(g_LocalPlayer);
-	g_MoveHelper->SetHost(nullptr);
-
-	g_GlobalVars->curtime = flOldCurtime;
-	g_GlobalVars->frametime = flOldFrametime;
-}
-
-
-
-
-
-bool RageAimbot::Hitchance(C_BaseCombatWeapon* weapon, QAngle angles, C_BasePlayer* ent, float chance) //pasted
-{
 	Vector forward, right, up;
-	Vector src = g_LocalPlayer->GetEyePos();
-	Math::AngleVectors(angles, forward, right, up);
 
-	int cHits = 0;
-	int cNeededHits = static_cast<int> (150.f * (chance / 100.f));
+	Math::AngleVectors(Angle, forward, right, up);
 
-	weapon->UpdateAccuracyPenalty();
-	float weap_spread = weapon->GetSpread();
-	float weap_inaccuracy = weapon->GetInaccuracy();
+	int Hits = 0, neededHits = (Seeds * (Chance / 100.f));
 
-	for (int i = 0; i < 150; i++)
+	float weapSpread = pWeapon->GetSpread(), weapInaccuracy = pWeapon->GetInaccuracy();
+
+	bool Return = false;
+
+	for (int i = 0; i < Seeds; i++)
 	{
-		float a = Math::RandomFloat(0.f, 1.f);
-		float b = Math::RandomFloat(0.f, 2.f * M_PI);
-		float c = Math::RandomFloat(0.f, 1.f);
-		float d = Math::RandomFloat(0.f, 2.f * M_PI);
+		float Inaccuracy = Math::RandomFloat(0.f, 1.f) * weapInaccuracy;
+		float Spread = Math::RandomFloat(0.f, 1.f) * weapSpread;
 
-		float inaccuracy = a * weap_inaccuracy;
-		float spread = c * weap_spread;
+		Vector spreadView((cos(Math::RandomFloat(0.f, 2.f * M_PI)) * Inaccuracy) + (cos(Math::RandomFloat(0.f, 2.f * M_PI)) * Spread), (sin(Math::RandomFloat(0.f, 2.f * M_PI)) * Inaccuracy) + (sin(Math::RandomFloat(0.f, 2.f * M_PI)) * Spread), 0), direction;
+		direction = Vector(forward.x + (spreadView.x * right.x) + (spreadView.y * up.x), forward.y + (spreadView.x * right.y) + (spreadView.y * up.y), forward.z + (spreadView.x * right.z) + (spreadView.y * up.z)).Normalize(); // guess i cant put vector in a cast *nvm im retarded
 
-		if (weapon->m_Item().m_iItemDefinitionIndex() == 64)
-		{
-			a = 1.f - a * a;
-			a = 1.f - c * c;
-		}
-
-		Vector spreadView((cos(b) * inaccuracy) + (cos(d) * spread), (sin(b) * inaccuracy) + (sin(d) * spread), 0), direction;
-
-		direction.x = forward.x + (spreadView.x * right.x) + (spreadView.y * up.x);
-		direction.y = forward.y + (spreadView.x * right.y) + (spreadView.y * up.y);
-		direction.z = forward.z + (spreadView.x * right.z) + (spreadView.y * up.z);
-		direction.Normalized();
-
-		QAngle viewAnglesSpread;
-		Math::VectorAngles(direction, up, viewAnglesSpread);
-		viewAnglesSpread.Normalize();
-
+		QAngle viewanglesSpread;
 		Vector viewForward;
-		Math::AngleVectors(viewAnglesSpread, viewForward);
+
+		Math::VectorAngles(direction, up, viewanglesSpread);
+		Math::Normalize3(viewanglesSpread);
+
+		Math::AngleVectors(viewanglesSpread, viewForward);
 		viewForward.NormalizeInPlace();
 
-		viewForward = src + (viewForward * weapon->GetCSWeaponData()->flRange);
+		viewForward = g_LocalPlayer->GetEyePos() + (viewForward * pWeapon->GetCSWeaponData()->flRange);
 
-		trace_t tr;
+		trace_t Trace;
 		Ray_t ray;
 
-		ray.Init(src, viewForward);
-		g_EngineTrace->ClipRayToEntity(ray, MASK_SHOT | CONTENTS_GRATE, ent, &tr);
+		ray.Init(g_LocalPlayer->GetEyePos(), viewForward);
+		g_EngineTrace->ClipRayToEntity(ray, MASK_SHOT | CONTENTS_GRATE, Player, &Trace);
+		//trace_t Trace;
+		//g_EngineTrace->ClipRayToEntity(ray_t(g_LocalPlayer->GetEyePos(), viewForward), MASK_SHOT | CONTENTS_GRATE, Player, &Trace);
 
-		if (tr.hit_entity == ent)
-			++cHits;
+		if (Trace.hit_entity == Player)
+			Hits++;
 
-		if (static_cast<int> ((static_cast<float> (cHits) / 150.f) * 100.f) >= chance)
-			return true;
+		if (((Hits / Seeds) * 100.f) >= Chance)
+		{
+			Return = true;
+			break;
+		}
 
-		if ((150 - i + cHits) < cNeededHits)
-			return false;
+		if ((Seeds - i + Hits) < neededHits)
+			break;
+	}
+
+	return Return;
+}
+void UpdateAnimationState(CBasePlayerAnimState* state, QAngle angle)
+{
+	if (!state)
+		return;
+
+	static auto UpdateAnimState = Utils::PatternScan(GetModuleHandleW(L"client.dll"), "55 8B EC 83 E4 F8 83 EC 18 56 57 8B F9 F3 0F 11 54 24");//sigchange
+	if (!UpdateAnimState)
+		return;
+
+	__asm
+	{
+		mov ecx, state
+
+		movss xmm1, dword ptr[angle + 4]
+		movss xmm2, dword ptr[angle]
+
+		call UpdateAnimState
+	}
+}
+void CreateAnimationState(CBasePlayerAnimState* state)
+{
+	using CreateAnimState_t = void(__thiscall*)(CBasePlayerAnimState*, C_BaseEntity*);
+	static auto CreateAnimState = (CreateAnimState_t)Utils::PatternScan(GetModuleHandleW(L"client.dll"), "55 8B EC 56 8B F1 B9 ? ? ? ? C7 46");
+	if (!CreateAnimState)
+		return;
+
+	CreateAnimState(state, g_LocalPlayer);
+}
+void ResetAnimationState(CBasePlayerAnimState* state)
+{
+	if (!state)
+		return;
+
+	using ResetAnimState_t = void(__thiscall*)(CBasePlayerAnimState*);
+	static auto ResetAnimState = (ResetAnimState_t)Utils::PatternScan(GetModuleHandleW(L"client.dll"), "56 6A 01 68 ? ? ? ? 8B F1");
+	if (!ResetAnimState)
+		return;
+
+	ResetAnimState(state);
+}
+void ResetAnimationStatereal(CBasePlayerAnimState* state)
+{
+	if (!state)
+		return;
+
+	using ResetAnimState_t = void(__thiscall*)(CBasePlayerAnimState*);
+	static auto ResetAnimState = (ResetAnimState_t)Utils::PatternScan(GetModuleHandleW(L"client.dll"), "56 6A 01 68 ? ? ? ? 8B F1");
+	if (!ResetAnimState)
+		return;
+
+	ResetAnimState(state);
+}
+void update_Fake_state(CBasePlayerAnimState* state, QAngle ang) {
+	using fn = void(__vectorcall*)(void*, void*, float, float, float, void*);
+	static auto ret = reinterpret_cast<fn>(Utils::PatternScan(GetModuleHandleW(L"client.dll"), "55 8B EC 83 E4 F8 83 EC 18 56 57 8B F9 F3 0F 11 54 24"));
+
+	if (!ret)
+		return;
+
+	ret(state, NULL, NULL, ang.yaw, ang.pitch, NULL);
+}
+
+void RageAimbot::UpdateFakeAnimations()
+{
+	if (!g_LocalPlayer || !g_LocalPlayer->IsAlive())
+		return;
+
+	if (!g_Options.chams_player_backtrack)
+		return;
+
+	if (m_fake_spawntime != g_LocalPlayer->m_flSpawnTime() || m_should_update_fake)
+	{
+		init_fake_anim = false;
+		m_fake_spawntime = g_LocalPlayer->m_flSpawnTime();
+		m_should_update_fake = false;
+	}
+
+	if (!init_fake_anim)
+	{
+		//m_fake_state = static_cast<CCSGOPlayerAnimState*> (g_pMemAlloc->Alloc(sizeof(CCSGOPlayerAnimState)));
+
+		if (m_fake_state != nullptr)
+			CreateAnimationState(m_fake_state);
+
+		init_fake_anim = true;
+	}
+
+	if (SendPacket)
+	{
+		std::array<AnimationLayer, 13> networked_layers;
+		std::memcpy(&networked_layers, g_LocalPlayer->GetAnimOverlays(), sizeof(AnimationLayer) * 13);
+
+		auto backup_abs_angles = g_LocalPlayer->GetAbsAngles();
+		auto backup_poses = g_LocalPlayer->m_flPoseParameter();
+		if (g_LocalPlayer->m_fFlags() & FL_ONGROUND)
+			g_LocalPlayer->m_fFlags() |= FL_ONGROUND;
+		else
+		{
+			if (g_LocalPlayer->GetAnimOverlays()[4].m_flWeight != 1.f && g_LocalPlayer->GetAnimOverlays()[5].m_flWeight != 0.f)
+				g_LocalPlayer->m_fFlags() |= FL_ONGROUND;
+
+			if (g_LocalPlayer->m_fFlags() & FL_ONGROUND)
+				g_LocalPlayer->m_fFlags() &= ~FL_ONGROUND;
+		}
+
+		update_Fake_state(m_fake_state, cmd->viewangles);
+		m_got_fake_matrix = g_LocalPlayer->SetupBones(FakeAngleMatrix, 128, 524032 - 66666/*g_Menu.Config.nightmodeval*/, false);
+		const auto org_tmp = g_LocalPlayer->GetRenderOrigin();
+		if (m_got_fake_matrix)
+		{
+			for (auto& i : FakeAngleMatrix)
+			{
+				i[0][3] -= org_tmp.x;
+				i[1][3] -= org_tmp.y;
+				i[2][3] -= org_tmp.z;
+			}
+		}
+		std::memcpy(g_LocalPlayer->GetAnimOverlays(), &networked_layers, sizeof(AnimationLayer) * 13);
+
+		g_LocalPlayer->m_flPoseParameter() = backup_poses;
+		g_LocalPlayer->GetAbsAngles() = backup_abs_angles;
+	}
+}
+bool fresh_tick()
+{
+	static int old_tick_count;
+
+	if (old_tick_count != g_GlobalVars->tickcount)
+	{
+		old_tick_count = g_GlobalVars->tickcount;
+		return true;
 	}
 
 	return false;
 }
+void update_state(CBasePlayerAnimState* state, QAngle ang) {
+	using fn = void(__vectorcall*)(void*, void*, float, float, float, void*);
+	static auto ret = reinterpret_cast<fn>(Utils::PatternScan(GetModuleHandleW(L"client.dll"), "55 8B EC 83 E4 F8 83 EC 18 56 57 8B F9 F3 0F 11 54 24"));
 
-bool RageAimbot::Hitscan(C_BasePlayer* Player, Vector& HitboxPos, bool Backtrack, matrix3x4_t* BoneMatrix)
+	if (!ret)
+		return;
+
+	ret(state, NULL, NULL, ang.yaw, ang.pitch, NULL);
+}
+void RageAimbot::LocalAnimationFix(C_BasePlayer* entity)
 {
-	std::vector<int> HitBoxesToScan{ 0,1,2,3,4,5,6, HITBOX_LEFT_FOOT, HITBOX_RIGHT_FOOT };
 
-	int bestHitbox = -1;
-	if (!Backtrack)
+	if (!entity || !entity->IsAlive() || !cmd)
+		return;
+
+	static float proper_abs = entity->GetPlayerAnimState()->m_flGoalFeetYaw;
+	static std::array<float, 24> sent_pose_params = entity->m_flPoseParameter();
+	static AnimationLayer backup_layers[15];
+
+	if (fresh_tick())
 	{
-		float highestDamage;
+		std::memcpy(backup_layers, entity->GetAnimOverlays(), (sizeof(AnimationLayer) * entity->GetNumAnimOverlays()));
+		entity->client_animation() = true;
+		entity->UpdateAnimationState(entity->GetPlayerAnimState(),cmd->viewangles);
 
-		highestDamage = g_Options.RageAimbotMinDmg;
+		if (entity->GetPlayerAnimState())
+			entity->GetPlayerAnimState()->m_iLastClientSideAnimationUpdateFramecount = g_GlobalVars->framecount - 1;
 
-		for (auto HitBoxID : HitBoxesToScan)
+		entity->UpdateClientSideAnimation();
+		if (SendPacket)
 		{
-			Player->SetAbsOrigin(Player->m_vecOrigin());
-			Vector Point = Player->GetHitboxPos2(HitBoxID, BoneMatrix);
-			float damage = Autowall::Get().CanHit(Point);
-			if (damage >= highestDamage || damage >= Player->m_iHealth())
-			{
-				bestHitbox = HitBoxID;
-				highestDamage = damage;
-				HitboxPos = Point;
-				return true;
-			}
+			proper_abs = entity->GetPlayerAnimState()->m_flGoalFeetYaw;
+			sent_pose_params = entity->m_flPoseParameter();
 		}
 	}
-	else //didnt autowall the backtrackz coz my pc is slow af and it goes skra
+	entity->client_animation() = false;
+	g_LocalPlayer->SetAbsAngles(QAngle(0, proper_abs, 0));
+	entity->GetPlayerAnimState()->m_flUnknownFraction = 0.f; // Lol.
+	std::memcpy(entity->GetAnimOverlays(), backup_layers, (sizeof(AnimationLayer) * entity->GetNumAnimOverlays()));
+	entity->m_flPoseParameter() = sent_pose_params;
+}
+
+void RageAimbot::Resolver(C_BasePlayer* Player, CBasePlayerAnimState* Animstate)
+{
+	if (!Player || !Player->IsAlive() || !Player->IsEnemy() || !Animstate)
+		return;
+
+	int MissedShots = ShotsFired[Player->EntIndex()] - ShotsHit[Player->EntIndex()];
+	static float OldYaw = Player->m_angEyeAngles().yaw;
+	float Back = Math::NormalizeYaw(Math::CalcAngle(g_LocalPlayer->m_vecOrigin(), Player->m_vecOrigin()).yaw + 180.f);
+	float EyeDelta = fabs(Math::NormalizeYaw(Player->m_angEyeAngles().yaw - OldYaw));
+	float AntiSide = 0.f;
+	float Brute = 0.f;
+
+	ForceSafePoint[Player->EntIndex()] = false;
+
+	if (UseFreestand[Player->EntIndex()] && MissedShots <= 1 && EyeDelta < 45.f)
 	{
-		for (auto HitBoxID : HitBoxesToScan)
-		{
-			//Player->SetAbsOrigin(BacktrackRecords[Player->EntIndex()].back().Origin);
-			Vector Point = Player->GetHitboxPos2(HitBoxID, BoneMatrix);
-			if (g_LocalPlayer->CanSeePlayer(Player, Point))
-			{
-				bestHitbox = HitBoxID;
-				HitboxPos = Point;
-				return true;
-			}
-		}
+		Brute = Math::NormalizeYaw(Back + LastFreestandAngle[Player->EntIndex()]);
 	}
-	return false;
-}
-
-
-float GetLerpTime()
-{
-	int ud_rate = g_CVar->FindVar("cl_updaterate")->GetInt();
-	ConVar* min_ud_rate = g_CVar->FindVar("sv_minupdaterate");
-	ConVar* max_ud_rate = g_CVar->FindVar("sv_maxupdaterate");
-
-	if (min_ud_rate && max_ud_rate)
-		ud_rate = max_ud_rate->GetInt();
-
-	float ratio = g_CVar->FindVar("cl_interp_ratio")->GetFloat();
-
-	if (ratio == 0)
-		ratio = 1.0f;
-
-	float lerp = g_CVar->FindVar("cl_interp")->GetFloat();
-	ConVar* c_min_ratio = g_CVar->FindVar("sv_client_min_interp_ratio");
-	ConVar* c_max_ratio = g_CVar->FindVar("sv_client_max_interp_ratio");
-
-	if (c_min_ratio && c_max_ratio && c_min_ratio->GetFloat() != 1)
-		ratio = std::clamp(ratio, c_min_ratio->GetFloat(), c_max_ratio->GetFloat());
-
-	return std::max(lerp, (ratio / ud_rate));
-}
-
-bool IsTickValid(int tick, CUserCmd* cmd) // gucci i think cant remember
-{
-	auto nci = g_EngineClient->GetNetChannelInfo();
-
-	if (!nci)
-		return false;
-
-	auto PredictedCmdArrivalTick = cmd->tick_count + 1 + TIME_TO_TICKS(nci->GetAvgLatency(FLOW_INCOMING) + nci->GetAvgLatency(FLOW_OUTGOING));
-	auto Correct = std::clamp(GetLerpTime() + nci->GetLatency(FLOW_OUTGOING), 0.f, 1.f) - TICKS_TO_TIME(PredictedCmdArrivalTick + TIME_TO_TICKS(GetLerpTime()) - (tick + TIME_TO_TICKS(GetLerpTime())));
-
-	return (abs(Correct) <= 0.2f);
-}
-
-
-
-
-void RageAimbot::StoreRecords2(C_BasePlayer* ent)
-{
-	PlayerRecords Setup;
-	static float ShotTime[65];
-	static float OldSimtime[65];
-	
-	for (int i = 1; i <= 64; i++)
+	else if (EyeDelta >= 45.f)
 	{
-		C_BasePlayer* Player = C_BasePlayer::GetPlayerByIndex(i);
-		if (ent != g_LocalPlayer)
-			ent->FixSetupBones(Matrix[ent->EntIndex()]);
-
-		if (BacktrackRecords[i].size() > 0)
-		{
-			Setup.Velocity = abs(ent->m_vecVelocity().Length2D());
-			Setup.SimTime = ent->m_flSimulationTime();
-			memcpy(Setup.Matrix, Matrix[ent->EntIndex()], (sizeof(matrix3x4_t) * 128));
-			Setup.Shot = false;
-			BacktrackRecords[ent->EntIndex()].push_back(Setup);
-		}
-		if (OldSimtime[ent->EntIndex()] != ent->m_flSimulationTime())
-		{
-			Setup.Velocity = abs(ent->m_vecVelocity().Length2D());
-
-			Setup.SimTime = ent->m_flSimulationTime();
-
-			Setup.m_vecAbsOrigin = ent->GetAbsOrigin();
-
-			if (ent == g_LocalPlayer)
-				ent->FixSetupBones(Matrix[ent->EntIndex()]);
-
-			memcpy(Setup.Matrix, Matrix[ent->EntIndex()], (sizeof(matrix3x4_t) * 128));
-
-			
-
-			BacktrackRecords[ent->EntIndex()].push_back(Setup);
-
-			OldSimtime[ent->EntIndex()] = ent->m_flSimulationTime();
-		}
-
-	}
-
-}
-void RageAimbot::ClearRecords(int i)
-{
-	if (BacktrackRecords[i].size() > 0)
-	{
-		for (int tick = 0; tick < BacktrackRecords[i].size(); tick++)
-		{
-			BacktrackRecords[i].erase(BacktrackRecords[i].begin() + tick);
-		}
-	}
-}
-
-
-
-//void RageAimbot::StoreRecords()
-//{
-//	for (int i = 1; i <= 64; i++)
-//	{
-//		C_BasePlayer* Player = C_BasePlayer::GetPlayerByIndex(i);
-//		if (!Player ||
-//			Player->IsDormant() ||
-//			!Player->IsPlayer() ||
-//			!Player->IsAlive() ||
-//			!Player->IsEnemy())
-//		{
-//			if (BacktrackRecords[i].size() > 0)
-//				for (int Tick = 0; Tick < BacktrackRecords[i].size(); Tick++)
-//					BacktrackRecords[i].erase(BacktrackRecords[i].begin() + Tick);
-//			continue;
-//		}
-//
-//		BacktrackRecords[i].insert(BacktrackRecords[i].begin(), TickInfo(Player));
-//		for (auto Tick : BacktrackRecords[i])
-//			if (!IsTickValid(Tick.SimulationTime, 0.2f))
-//				BacktrackRecords[i].pop_back();
-//	}
-//}
-float Hitchance2(C_BaseCombatWeapon* Weapon)
-// coz i need to restore shit for the proper hitchance to work with backtrack
-{
-	float Hitchance = 101;
-	if (!Weapon) return 0;
-	if (g_Options.RageAimbotHitchance > 1)
-	{
-		float Inaccuracy = Weapon->GetInaccuracy();
-		if (Inaccuracy == 0) Inaccuracy = 0.0000001;
-		Inaccuracy = 1 / Inaccuracy;
-		Hitchance = Inaccuracy;
-
-	}
-	return Hitchance;
-}
-
-
-
-void RageAimbot::Autostop(CUserCmd* cmd)
-{
-	
-
-	//cmd->viewangles.clamp();
-
-	auto vel2 = g_LocalPlayer->m_vecVelocity();
-	const auto speed = vel2.Length();
-	if (speed > 15.f)
-	{
-		Vector dir;
-		//Math::VectorAngles(vel2, &dir);
-		dir.y = cmd->viewangles.yaw - dir.y;
-
-		Vector new_move;
-		//Math::AngleVectors(dir, &new_move);
-		const auto max = std::max(std::fabs(cmd->forwardmove), std::fabs(cmd->sidemove));
-		const auto mult = 450.f / max;
-		new_move *= -mult;
-
-		cmd->forwardmove = new_move.x;
-		cmd->sidemove = new_move.y;
+		ForceSafePoint[Player->EntIndex()] = true;
 	}
 	else
 	{
+		switch ((MissedShots - 2) % 2)
+		{
+		case 0:
+			if (Math::NormalizeYaw(Player->m_angEyeAngles().yaw - Back) > 0.f)
+			{
+				AntiSide = 90.f;
+			}
+			else if (Math::NormalizeYaw(Player->m_angEyeAngles().yaw - Back) < 0.f)
+			{
+				AntiSide = -90.f;
+			}
+			break;
+
+		case 1:
+			if (Math::NormalizeYaw(Player->m_angEyeAngles().yaw - Back) > 0.f)
+			{
+				AntiSide = -90.f;
+			}
+			else if (Math::NormalizeYaw(Player->m_angEyeAngles().yaw - Back) < 0.f)
+			{
+				AntiSide = 90.f;
+			}
+
+			break;
+		}
+		Brute = Math::NormalizeYaw(Animstate->m_flGoalFeetYaw + AntiSide);
+	}
+	OldYaw = Player->m_angEyeAngles().yaw;
+	Animstate->m_flGoalFeetYaw = Brute;
+}
+
+void RageAimbot::AnimationFix()
+{
+	for (int i = 1; i <= 64; i++)
+	{
+		C_BasePlayer* Player = C_BasePlayer::GetPlayerByIndex(i);
+		if (!Player ||
+			Player->IsDormant() ||
+			!Player->IsPlayer() ||
+			!Player->IsAlive() ||
+			Player == g_LocalPlayer)
+			continue;
+		if (g_Options.rage_enable)
+		{
+			CBasePlayerAnimState* state = Player->GetPlayerAnimState();
+			if (state)
+			{
+				// backup
+				const float curtime = g_GlobalVars->curtime;
+				const float frametime = g_GlobalVars->frametime;
+
+				static auto host_timescale = g_CVar->FindVar(("host_timescale"));
+
+				g_GlobalVars->frametime = g_GlobalVars->interval_per_tick * host_timescale->GetFloat();
+				g_GlobalVars->curtime = Player->m_flSimulationTime();
+
+				AnimationLayer backup_layers[15];
+				std::memcpy(backup_layers, Player->GetAnimOverlays(), (sizeof(AnimationLayer) * Player->GetNumAnimOverlays()));
+				static std::array<float, 24> backup_params = g_LocalPlayer->m_flPoseParameter();
+
+				int backup_eflags = Player->m_iEFlags();
+
+				// SetLocalVelocity
+				Player->m_iEFlags() &= ~0x1000; // InvalidatePhysicsRecursive(VELOCITY_CHANGED); EFL_DIRTY_ABSVELOCITY = 0x1000
+				Player->m_vecAbsVelocity() = Player->m_vecVelocity();
+
+				Player->client_animation() = true;
+
+				player_info_t info;
+				g_EngineClient->GetPlayerInfo(Player->EntIndex(), &info);
+				bool Legit = (TIME_TO_TICKS(Player->m_flSimulationTime() - Player->m_flOldSimulationTime()) <= 1) || (info.fakeplayer);
+				if (g_Options.RageAimbotResolver && !Legit)
+					Resolver(Player, state);
+
+				state->m_iLastClientSideAnimationUpdateFramecount = 0;
+
+				Player->UpdateClientSideAnimation();
+
+				// restore
+				std::memcpy(Player->GetAnimOverlays(), backup_layers, (sizeof(AnimationLayer) * Player->GetNumAnimOverlays()));
+				g_LocalPlayer->m_flPoseParameter() = backup_params;
+
+				g_GlobalVars->curtime = curtime;
+				g_GlobalVars->frametime = frametime;
+
+				Player->m_iEFlags() = backup_eflags;
+
+				Player->client_animation() = false;
+
+				Player->SetupBones2(nullptr, -1, 0x7FF00, g_GlobalVars->curtime);
+			}
+		}
+		else
+			Player->UpdateClientSideAnimation();
+	}
+}//
+
+void StopMovement(CUserCmd* cmd)
+{
+	constexpr bool isHexagoneGodlike = true;
+
+	if (g_LocalPlayer->m_nMoveType() != MOVETYPE_WALK)
+		return; // Not implemented otherwise :(
+
+	Vector hvel = g_LocalPlayer->m_vecVelocity();
+	hvel.z = 0;
+	float speed = hvel.Length2D();
+
+	if (speed < 1.f) // Will be clipped to zero anyways
+	{
 		cmd->forwardmove = 0.f;
 		cmd->sidemove = 0.f;
+		return;
+	}
+
+	// Homework: Get these dynamically
+	float accel = 5.5f;
+	float maxSpeed = 320.f;
+	float playerSurfaceFriction = 1.0f; // I'm a slimy boi
+	float max_accelspeed = accel * g_GlobalVars->interval_per_tick * maxSpeed * playerSurfaceFriction;
+
+	float wishspeed{};
+
+	// Only do custom deceleration if it won't end at zero when applying max_accel
+	// Gamemovement truncates speed < 1 to 0
+	if (speed - max_accelspeed <= -1.f)
+	{
+		// We try to solve for speed being zero after acceleration:
+		// speed - accelspeed = 0
+		// speed - accel*frametime*wishspeed = 0
+		// accel*frametime*wishspeed = speed
+		// wishspeed = speed / (accel*frametime)
+		// ^ Theoretically, that's the right equation, but it doesn't work as nice as 
+		//   doing the reciprocal of that times max_accelspeed, so I'm doing that :shrug:
+		wishspeed = max_accelspeed / (speed / (accel * g_GlobalVars->interval_per_tick));
+	}
+	else // Full deceleration, since it won't overshoot
+	{
+		// Or use max_accelspeed, doesn't matter
+		wishspeed = max_accelspeed;
+	}
+
+	// Calculate the negative movement of our velocity, relative to our viewangles
+	Vector vndir = (hvel * -1.f);
+	QAngle ndir;
+	Math::VectorAngles(vndir, ndir);
+	ndir.yaw = cmd->viewangles.yaw - ndir.yaw; // Relative to local view
+	Vector vndir2;
+	Math::AngleVectors(ndir, vndir2);
+
+	cmd->forwardmove = vndir2.x * wishspeed;
+	cmd->sidemove = vndir2.y * wishspeed;
+}
+void DoSlowWalk(CUserCmd* cmd, C_BaseCombatWeapon* Weapon)
+{
+	float amount = 0.0034f * g_Options.rage_sloswalk; // options.misc.slow_walk_amount has 100 max value
+
+	Vector velocity = g_LocalPlayer->m_vecVelocity();
+	QAngle direction;
+
+	Math::VectorAngles(velocity, direction);
+
+	float speed = velocity.Length2D();
+
+	direction.yaw = cmd->viewangles.yaw - direction.yaw;
+
+	Vector forward;
+
+	Math::AngleVectors(direction, forward);
+
+	Vector source = forward * -speed;
+
+	if (speed >= (*(float*)((uintptr_t)Weapon->GetCSWeaponData() + 0x0130/*maxspeed*/) * amount))
+	{
+		cmd->forwardmove = source.x;
+		cmd->sidemove = source.y;
 	}
 }
 
+void RestorePlayer(C_BasePlayer* Player, TickInfo Record)
+{
+	Player->InvalidateBoneCache();
+
+	Player->GetCollideable()->OBBMins() == Record.Mins;
+	Player->GetCollideable()->OBBMaxs() == Record.Maxs;
+
+	Player->m_angEyeAngles() = Record.Angles;
+	Player->m_vecOrigin() = Record.Origin;
+	Player->SetAbsOrigin(Record.Origin);
+
+	Player->m_fFlags() = Record.Flags;
+
+	int layerCount = Player->GetNumAnimOverlays();
+	for (int i = 0; i < layerCount; ++i)
+	{
+		AnimationLayer* currentLayer = Player->GetAnimOverlay(i);
+		currentLayer->m_nOrder = Record.LayerRecords[i].m_nOrder;
+		currentLayer->m_nSequence = Record.LayerRecords[i].m_nSequence;
+		currentLayer->m_flWeight = Record.LayerRecords[i].m_flWeight;
+		currentLayer->m_flCycle = Record.LayerRecords[i].m_flCycle;
+	}
+
+	Player->m_flPoseParameter() = Record.PoseParams;
+}
+bool RageAimbot::ShouldBaim(C_BasePlayer* Player)
+{
+	return false;
+}
+void RageAimbot::GetMultipointPositions(C_BasePlayer* Player, std::vector<Vector>& Positions, int HitboxIndex, float Scale, matrix3x4_t* BoneMatrix)
+{
+	auto StudioModel = g_MdlInfo->GetStudiomodel(Player->GetModel());
+	if (StudioModel) {
+		auto Hitbox = StudioModel->GetHitboxSet(0)->GetHitbox(HitboxIndex);
+		if (Hitbox) {
+
+			const float HitboxRadius = Hitbox->m_flRadius * Scale;
+
+			if (Hitbox->m_flRadius == -1.f)
+			{
+				const auto Center = (Hitbox->bbmin + Hitbox->bbmax) * 0.5f;
+
+				Positions.emplace_back();
+			}
+			else
+			{
+				Vector P[12];
+				for (int j = 0; j < 6; j++) { P[j] = Hitbox->bbmin; }
+				for (int j = 7; j < 12; j++) { P[j] = Hitbox->bbmax; }
+
+				P[1].x += HitboxRadius;
+				P[2].x -= HitboxRadius;
+				P[3].y += HitboxRadius;
+				P[4].y -= HitboxRadius;
+				P[5].z += HitboxRadius;
+
+				P[6].x += HitboxRadius;
+				P[7].x -= HitboxRadius;
+				P[8].y += HitboxRadius;
+				P[9].y -= HitboxRadius;
+				P[10].z += HitboxRadius;
+				P[11].z -= HitboxRadius;
+
+				for (int j = 0; j < 12; j++)
+				{
+					Math::VectorTransform(P[j], BoneMatrix[Hitbox->bone], P[j]);
+					Positions.push_back(P[j]);
+				}
+			}
+		}
+	}
+}
+bool RageAimbot::Hitscan(C_BasePlayer* Player, Vector& HitboxPos, matrix3x4_t* BoneMatrix, bool Backtrack,TickInfo Record)
+{
+	if (!g_Options.RageAimbotHead && !g_Options.RageAimbotBody && !g_Options.RageAimbotLegs && !g_Options.RageAimbotToes)
+		return false;
+	int MissedShots = ShotsFired[Player->EntIndex()] -ShotsHit[Player->EntIndex()];
+	if (Backtrack)
+	{
+		std::vector<int> HitboxesToScan;
+		if (g_Options.RageAimbotHead)
+		{
+			HitboxesToScan.push_back(HITBOX_HEAD);
+			HitboxesToScan.push_back(HITBOX_NECK);
+		}
+		if (g_Options.RageAimbotBody)
+		{
+			for (int i = HITBOX_PELVIS; i <= HITBOX_UPPER_CHEST; i++)
+				HitboxesToScan.push_back(i);
+		}
+		if (g_Options.RageAimbotLegs)
+		{
+			for (int i = HITBOX_RIGHT_THIGH; i <= HITBOX_LEFT_CALF; i++)
+				HitboxesToScan.push_back(i);
+		}
+		if (g_Options.RageAimbotToes)
+		{
+			HitboxesToScan.push_back(HITBOX_RIGHT_FOOT);
+			HitboxesToScan.push_back(HITBOX_LEFT_FOOT);
+		}
+		if (g_Options.RageAimbotSafePoint)
+		{
+			float AngToLocal = Math::CalcAngle(g_LocalPlayer->m_vecOrigin(), Record.Origin).yaw + 180.f;
+			bool Backward = ((AngToLocal > 135 || AngToLocal < -135) || (AngToLocal < 45 || AngToLocal > -45));
+			bool Freestanding = !Backward;
+			player_info_t info;
+			g_EngineClient->GetPlayerInfo(Player->EntIndex(), &info);
+			bool Legit = (TIME_TO_TICKS(Player->m_flSimulationTime() - Player->m_flOldSimulationTime()) <= 1) || (info.fakeplayer);
+			if (!Freestanding && !Legit && Player->MaxDesyncDelta() >= 35.f)
+			{
+				HitboxesToScan.erase(HitboxesToScan.begin(), HitboxesToScan.begin() + HitboxesToScan.size());
+
+				for (int i = HITBOX_PELVIS; i <= HITBOX_LOWER_CHEST; i++)
+				{
+					HitboxesToScan.push_back(i);
+				}
+			}
+		}
+		if ((g_Options.RageAimbotBaimAfter && MissedShots >= g_Options.RageAimbotBaimAfter) || ForceSafePoint[Player->EntIndex()])
+		{
+			HitboxesToScan.erase(HitboxesToScan.begin(), HitboxesToScan.begin() + HitboxesToScan.size());
+			for (int i = HITBOX_PELVIS; i <= HITBOX_UPPER_CHEST; i++)
+			{
+				HitboxesToScan.push_back(i);
+			}
+		}
+		if (HitboxesToScan.size())
+		{
+			for (auto HitBoxID : HitboxesToScan)
+			{
+				Vector Point = Player->GetHitboxPos(HitBoxID, BoneMatrix);
+				if (g_LocalPlayer->CanSeePlayer(Player, Point))
+				{
+					HitboxPos = Point;
+					return true;
+				}
+			}
+		}
+	}
+	else
+	{
+		std::vector<Vector> ScanPositions;
+		std::vector<Vector> HitboxPositions;
+		std::vector<Vector> MultipointPositions;
+		int MinimumDamage = std::min<int>(Player->m_iHealth() + 10, g_Options.RageAimbotMinDmg);
+		int BestDamage = 0;
+		Vector BestPosition = Vector{};
+
+		if (g_Options.RageAimbotHead)
+		{
+			HitboxPositions.push_back(Player->GetHitboxPos(HITBOX_HEAD, BoneMatrix));
+			HitboxPositions.push_back(Player->GetHitboxPos(HITBOX_NECK, BoneMatrix));
+			if (g_Options.RageAimbotHeadScale)
+				GetMultipointPositions(Player, MultipointPositions, HITBOX_HEAD, g_Options.RageAimbotHeadScale, BoneMatrix);
+		}
+		float Velocity = abs(Player->m_vecVelocity().Length2D());
+
+		if (!g_Options.RageAimbotDelayShot && Velocity > 0.f || !(Player->m_fFlags() & FL_ONGROUND))
+			Velocity = 0.f;
+
+		if (Velocity <= 200.f || ShouldBaim(Player))
+		{
+			if (g_Options.RageAimbotBody)
+			{
+				for (int i = HITBOX_PELVIS; i <= HITBOX_UPPER_CHEST; i++)
+				{
+					HitboxPositions.push_back(Player->GetHitboxPos(i, BoneMatrix));
+					if (g_Options.RageAimbotBodyScale)
+						GetMultipointPositions(Player, MultipointPositions, i, g_Options.RageAimbotBodyScale, BoneMatrix);
+				}
+			}
+			if (g_Options.RageAimbotLegs)
+			{
+				for (int i = HITBOX_RIGHT_THIGH; i <= HITBOX_LEFT_CALF; i++)
+					HitboxPositions.push_back(Player->GetHitboxPos(i, BoneMatrix));
+			}
+			if (g_Options.RageAimbotToes)
+			{
+				HitboxPositions.push_back(Player->GetHitboxPos(HITBOX_RIGHT_FOOT, BoneMatrix));
+				HitboxPositions.push_back(Player->GetHitboxPos(HITBOX_LEFT_FOOT, BoneMatrix));
+			}
+		}
+		if (g_Options.RageAimbotSafePoint)
+		{
+			float AngToLocal = Math::CalcAngle(g_LocalPlayer->m_vecOrigin(), Player->m_vecOrigin()).yaw + 180.f;
+			bool Backward = ((AngToLocal > 135 || AngToLocal < -135) || (AngToLocal < 45 || AngToLocal > -45));
+			bool Freestanding = !Backward;
+			player_info_t info;
+			g_EngineClient->GetPlayerInfo(Player->EntIndex(), &info);
+			bool Legit = (TIME_TO_TICKS(Player->m_flSimulationTime() - Player->m_flOldSimulationTime()) <= 1) || (info.fakeplayer);
+			if (!Freestanding && !Legit && Player->MaxDesyncDelta() >= 35.f)
+			{
+				HitboxPositions.erase(HitboxPositions.begin(), HitboxPositions.begin() + HitboxPositions.size());
+				MultipointPositions.erase(MultipointPositions.begin(), MultipointPositions.begin() + MultipointPositions.size());
+
+				for (int i = HITBOX_PELVIS; i <= HITBOX_LOWER_CHEST; i++)
+				{
+					HitboxPositions.push_back(Player->GetHitboxPos(i, BoneMatrix));
+					if (g_Options.RageAimbotBodyScale)
+						GetMultipointPositions(Player, MultipointPositions, i, g_Options.RageAimbotBodyScale, BoneMatrix);
+				}
+			}
+		}
+		if ((g_Options.RageAimbotBaimAfter && MissedShots >= g_Options.RageAimbotBaimAfter) || ForceSafePoint[Player->EntIndex()])
+		{
+			HitboxPositions.erase(HitboxPositions.begin(), HitboxPositions.begin() + HitboxPositions.size());
+			MultipointPositions.erase(MultipointPositions.begin(), MultipointPositions.begin() + MultipointPositions.size());
+			for (int i = HITBOX_PELVIS; i <= HITBOX_LOWER_CHEST; i++)
+			{
+				HitboxPositions.push_back(Player->GetHitboxPos(i, BoneMatrix));
+				if (g_Options.RageAimbotBodyScale)
+					GetMultipointPositions(Player, MultipointPositions, i, g_Options.RageAimbotBodyScale, BoneMatrix);
+			}
+		}
+		for (auto Position : HitboxPositions)
+			ScanPositions.push_back(Position);
+		for (auto Position : MultipointPositions)
+			ScanPositions.push_back(Position);
+
+		for (auto Position : ScanPositions)
+		{
+			float Damage = Autowall::Get().CanHit(Position);
+			if (Damage > BestDamage)
+			{
+				BestDamage = Damage;
+				BestPosition = Position;
+			}
+		}
+		if (BestDamage >= MinimumDamage)
+		{
+			HitboxPos = BestPosition;
+			return true;
+		}
+	}
+
+
+	return false;
+}
+void RageAimbot::StoreRecords()
+{
+	for (int i = 1; i <= 64; i++)
+	{
+		C_BasePlayer* Player = C_BasePlayer::GetPlayerByIndex(i);
+		if (!Player ||
+			Player->IsDormant() ||
+			!Player->IsPlayer() ||
+			!Player->IsEnemy() ||
+			!Player->IsAlive())
+		{
+			BacktrackRecords[i].erase(BacktrackRecords[i].begin(), BacktrackRecords[i].begin() + BacktrackRecords[i].size());
+			continue;
+		}
+
+		BacktrackRecords[i].insert(BacktrackRecords[i].begin(), TickInfo(Player));
+	}
+}
+//void RageAimbot::WeaponSettings(C_BaseCombatWeapon* Weapon)
+//{
+//	/*if (Weapon->m_Item().m_iItemDefinitionIndex() == WEAPON_SCAR20 ||
+//		Weapon->m_Item().m_iItemDefinitionIndex() == WEAPON_G3SG1)
+//	{
+//		HitchanceValue = g_Options.RageAimbotHitchance;
+//		MinDmgValue = g_Options.RageAimbotMinDmg;
+//	}
+//	else if (Weapon->m_Item().m_iItemDefinitionIndex() == WEAPON_SSG08)
+//	{
+//		HitchanceValue = g_Options.RageAimbotHitchance;
+//		MinDmgValue = g_Options.RageAimbotMinDmg;
+//	}
+//	else if (Weapon->m_Item().m_iItemDefinitionIndex() == WEAPON_AWP)
+//	{
+//		HitchanceValue = g_Options.RageAimbotHitchance;
+//		MinDmgValue = g_Options.RageAimbotMinDmg;
+//	}
+//	else if (Weapon->IsPistol())
+//	{
+//		if (Weapon->m_Item().m_iItemDefinitionIndex() == WEAPON_DEAGLE ||
+//			Weapon->m_Item().m_iItemDefinitionIndex() == WEAPON_REVOLVER)
+//		{
+//			HitchanceValue = g_Options.RageAimbotHitchance;
+//			MinDmgValue = g_Options.RageAimbotMinDmg;
+//		}
+//		else
+//		{
+//			HitchanceValue = g_Options.RageAimbotHitchance;
+//			MinDmgValue = g_Options.RageAimbotMinDmg;
+//		}
+//	}*/
+//	else
+//	{
+//		HitchanceValue = g_Options.RageAimbotMinDmg;
+//		MinDmgValue = g_Options.RageAimbotMinDmg;
+//	}
+//}
 void RageAimbot::Do(CUserCmd* cmd, C_BaseCombatWeapon* Weapon, bool& bSendPacket)
 {
-	for (int i = 1; i <= g_EngineClient->GetMaxClients(); ++i)
-	{
-		C_BasePlayer* Players = C_BasePlayer::GetPlayerByIndex(i);
-		if (!g_EngineClient->IsConnected() && g_EngineClient->IsInGame())
-			return;
-		if (!g_LocalPlayer ||
-			!g_LocalPlayer->IsAlive() ||
-			!Weapon ||
-			Weapon->IsKnifeorNade() ||
-			!g_Options.rage_enable)
-		{
-			ClearRecords(i);
-		}
+	if (!g_Options.rage_enable)
 		return;
-		StoreRecords2(Players);
-		EnemyEyeAngs[i] = Players->eyeangles();
-
-		if (BacktrackRecords[i].size() == 0 || !g_LocalPlayer->IsAlive())
+	for (int i = 1; i <= 64; i++)
+	{
+		C_BasePlayer* Player = C_BasePlayer::GetPlayerByIndex(i);
+		if (!Player ||
+			!Player->IsPlayer() ||
+			Player->IsDormant() ||
+			!Player->IsAlive() ||
+			!Player->IsEnemy() ||
+			Player->m_bGunGameImmunity() ||
+			BacktrackRecords[i].size() < 1)
 			continue;
 
-
-		if (!g_LocalPlayer->m_hActiveWeapon() || Weapon->IsGrenade())
-			continue;
-
-		bestdamage = 0;
-
-	//	Vector Hitbox = Hitscan(Players);
-
+		for (auto Tick : BacktrackRecords[i])
+			if (!Utils::IsTickValid(Tick.SimulationTime, 0.2f))
+				BacktrackRecords[i].pop_back();
 	}
+	static bool Shot = false;
+	if (!g_LocalPlayer ||
+		!g_LocalPlayer->IsAlive() ||
+		!Weapon || Weapon->IsKnife() ||	Weapon->IsGrenade())
+	{
+		Shot = false;
+		return;
+	}
+
+	//WeaponSettings(Weapon);
+
+	//if (InputSys::Get().IsKeyDown(VK_SHIFT))
+	//	DoSlowWalk(cmd, Weapon);
+
+	int BestTargetIndex = -1;
+	float BestTargetDistance = FLT_MAX;
+	float BestTargetSimtime = 0.f;
+	Vector Hitbox = Vector{};
+	bool Backtrack = false;
+
+	for (int i = 1; i <= 64; i++)
+	{
+		C_BasePlayer* Player = C_BasePlayer::GetPlayerByIndex(i);
+		if (!Player ||
+			!Player->IsPlayer() ||
+			Player->IsDormant() ||
+			!Player->IsAlive() ||
+			!Player->IsEnemy() ||
+			Player->m_bGunGameImmunity() ||
+			BacktrackRecords[i].size() < 1)
+			continue;
+
+		auto CurrentRecord = BacktrackRecords[i].front();
+		auto BacktrackRecord = BacktrackRecords[i].back();
+
+		float PlayerDistance = Math::VectorDistance(g_LocalPlayer->m_vecOrigin(), Player->m_vecOrigin());
+
+		if (BestTargetDistance > PlayerDistance)
+		{
+			if (CurrentRecord.MatrixBuilt && CurrentRecord.BoneMatrix != nullptr &&
+				Hitscan(Player, Hitbox, CurrentRecord.BoneMatrix, false, CurrentRecord))
+			{
+				BestTargetDistance = PlayerDistance;
+				BestTargetIndex = i;
+				BestTargetSimtime = CurrentRecord.SimulationTime;
+				Backtrack = false;
+			}
+			else if (BacktrackRecord.MatrixBuilt && BacktrackRecord.BoneMatrix != nullptr &&
+				Hitscan(Player, Hitbox, BacktrackRecord.BoneMatrix, true, BacktrackRecord))
+			{
+				BestTargetDistance = PlayerDistance;
+				BestTargetIndex = i;
+				BestTargetSimtime = BacktrackRecord.SimulationTime;
+				Backtrack = true;
+			}
+		}
+	}
+	if (Shot)
+	{
+		bSendPacket = true;
+		DoAntiaim(cmd, Weapon, bSendPacket);
+		Shot = false;
+	}
+	if (BestTargetIndex != -1 && Hitbox.IsValid() && BestTargetSimtime)
+	{
+		C_BasePlayer* Target = C_BasePlayer::GetPlayerByIndex(BestTargetIndex);
+		if (!Target) return;
+
+		QAngle AimAngle = Math::CalcAngle(g_LocalPlayer->GetEyePos(), Hitbox);
+		AimAngle -= g_LocalPlayer->m_aimPunchAngle() * g_CVar->FindVar("weapon_recoil_scale")->GetFloat();
+
+		//QAngle AimAngle = Math::CalcAngle(g_LocalPlayer->GetEyePos(), Hitbox) - g_LocalPlayer->m_aimPunchAngle() * g_CVar->FindVar("weapon_recoil_scale")->GetFloat();
+		Math::Normalize3(AimAngle);
+		Math::ClampAngles(AimAngle);
+		//AimAngle -= g_LocalPlayer->m_aimPunchAngle() * g_CVar->FindVar("weapon_recoil_scale")->GetFloat();
+
+
+		if (Weapon->IsSniper() && !g_LocalPlayer->m_bIsScoped())
+			cmd->buttons |= IN_ATTACK2;
+
+		if (Backtrack)
+			RestorePlayer(Target, BacktrackRecords[BestTargetIndex].back());
+
+		if (!Weapon->IsZeus() && (g_LocalPlayer->m_fFlags() & FL_ONGROUND))
+		{
+			if (Weapon->CanFire())
+			{
+				StopMovement(cmd);
+			}
+		}
+
+		if (!Hitchance(Target, Weapon, AimAngle, Hitbox, g_Options.RageAimbotHitchance) && g_Options.RageAimbotHitchance)
+		{
+
+
+		}
+		else
+		{
+			if (/*!(cmd->buttons & IN_ATTACK) && */Weapon->CanFire())
+			{
+	
+				cmd->viewangles = AimAngle;
+				if (!g_Options.rage_silent)
+				{
+					//cmd->viewangles = AimAngle;
+					g_EngineClient->SetViewAngles(&cmd->viewangles);
+				}
+				cmd->tick_count = TIME_TO_TICKS(BestTargetSimtime + Utils::GetLerpTime());
+				cmd->buttons |= IN_ATTACK;
+				//ShotsFired[Target->EntIndex()] += 1;
+			}
+		}
+		if (Backtrack)
+			RestorePlayer(Target, BacktrackRecords[BestTargetIndex].front());
+	}
+}
+bool LbyUpdate() {
+
+	auto speed = g_LocalPlayer->m_vecVelocity().Length2D();
+	static float next_lby = 0.00f;
+	float curtime = g_GlobalVars->curtime;
+
+	if (!(g_LocalPlayer->m_fFlags() & FL_ONGROUND))
+		return false;
+
+	if (speed > 0.1f)
+		next_lby = curtime + 0.22;
+
+	if (next_lby < curtime)
+	{
+		next_lby = curtime + 1.1;
+		return true;
+	}
+	else
+		return false;
+}
+void RageAimbot::DoFakelag(bool& bSendPacket)
+{
+	int ChokeLimit = g_Options.misc_fakelag;
+	if (ChokeLimit < 1)
+		ChokeLimit = 1;
+
+	/*if (Variables.MiscFakeDuckKey && InputSys::Get().IsKeyDown(Variables.MiscFakeDuckKey))
+		ChokeLimit = 14;*/
+
+	if (g_EngineClient->IsVoiceRecording() || (g_LocalPlayer->m_vecVelocity().Length2D() <= 2.f /*&& !(Variables.MiscFakeDuckKey && InputSys::Get().IsKeyDown(Variables.MiscFakeDuckKey))*/))
+		ChokeLimit = 1;
+
+	bSendPacket = (g_EngineClient->GetNetChannel()->m_nChokedPackets >= ChokeLimit);
+}
+void RageAimbot::DoAntiaim(CUserCmd* cmd, C_BaseCombatWeapon* Weapon, bool& bSendPacket)
+{
+	if (!g_LocalPlayer ||
+		!g_LocalPlayer->IsAlive() ||
+		!Weapon ||
+		g_LocalPlayer->m_hActiveWeapon()->IsKnife() && cmd->buttons & IN_ATTACK ||
+		!g_LocalPlayer->m_hActiveWeapon()->IsGrenade() && cmd->buttons & IN_ATTACK && Weapon->CanFire() ||
+		cmd->buttons & IN_USE ||
+		g_LocalPlayer->m_hActiveWeapon()->IsGrenade() && Weapon->m_fThrowTime() > 0.f ||
+		g_LocalPlayer->m_nMoveType() == MOVETYPE_LADDER ||
+		g_LocalPlayer->m_nMoveType() == MOVETYPE_NOCLIP)
+		return;
+
+	cmd->viewangles.pitch = 89.f;
+	//cmd->viewangles.yaw += 180.f;
+	if (SendPacket)
+	{
+		cmd->viewangles.yaw += 180.f;
+	}
+	else
+	{
+		cmd->viewangles.yaw += 180.f - g_LocalPlayer->MaxDesyncDelta();
+	}
+
+	if (g_LocalPlayer->m_fFlags() & FL_ONGROUND && cmd->sidemove < 4 && cmd->sidemove > -4) {
+		auto sideAmount = (cmd->buttons & IN_DUCK) ? 3.f : 1.1f;
+		static bool switch_ = false;
+		if (switch_)
+			cmd->sidemove += sideAmount;
+		else
+			cmd->sidemove += -sideAmount;
+		switch_ = !switch_;
+
+		MovementFix::Get().m_oldforward = cmd->forwardmove;
+		MovementFix::Get().m_oldsidemove = cmd->sidemove;
+	}
+
+	cmd->buttons &= ~(IN_FORWARD | IN_BACK | IN_MOVERIGHT | IN_MOVELEFT);
 }

@@ -37,7 +37,7 @@ namespace Utils {
      *
      */
     char ConsoleReadKey();
-
+    uintptr_t FindSignature(const char* szModule, const char* szSignature);
     /*
      * @brief Wait for all the given modules to be loaded
      *
@@ -71,4 +71,7 @@ namespace Utils {
      * @param name New name
      */
     void SetName(const char* name);
+
+    float GetLerpTime();
+    bool IsTickValid(float SimulationTime, float MaxTime);
 }

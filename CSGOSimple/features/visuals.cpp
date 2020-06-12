@@ -696,67 +696,67 @@ void Visuals::RenderItemEsp(C_BaseEntity* ent)
 	Render::Get().RenderText(itemstr, ImVec2((bbox.left + w * 0.5f) - sz.x * 0.5f, bbox.bottom + 1), 14.f, g_Options.color_esp_item);
 }
 //--------------------------------------------------------------------------------
-void Visuals::ThirdPerson() {
-	if (!g_LocalPlayer)
-		return;
-
-	if (g_Options.misc_thirdperson && g_LocalPlayer->IsAlive())
-	{
-		if (!g_Input->m_fCameraInThirdPerson)
-		{
-			g_Input->m_fCameraInThirdPerson = true;
-		}
-
-		float dist = g_Options.misc_thirdperson_dist;
-
-		QAngle *view = g_LocalPlayer->GetVAngles();
-		trace_t tr;
-		Ray_t ray;
-
-		Vector desiredCamOffset = Vector(cos(DEG2RAD(view->yaw)) * dist,
-			sin(DEG2RAD(view->yaw)) * dist,
-			sin(DEG2RAD(-view->pitch)) * dist
-		);
-
-		//cast a ray from the Current camera Origin to the Desired 3rd person Camera origin
-		ray.Init(g_LocalPlayer->GetEyePos(), (g_LocalPlayer->GetEyePos() - desiredCamOffset));
-		CTraceFilter traceFilter;
-		traceFilter.pSkip = g_LocalPlayer;
-		g_EngineTrace->TraceRay(ray, MASK_SHOT, &traceFilter, &tr);
-
-		Vector diff = g_LocalPlayer->GetEyePos() - tr.endpos;
-
-		float distance2D = sqrt(abs(diff.x * diff.x) + abs(diff.y * diff.y));// Pythagorean
-
-		bool horOK = distance2D > (dist - 2.0f);
-		bool vertOK = (abs(diff.z) - abs(desiredCamOffset.z) < 3.0f);
-
-		float cameraDistance;
-
-		if (horOK && vertOK)  // If we are clear of obstacles
-		{
-			cameraDistance = dist; // go ahead and set the distance to the setting
-		}
-		else
-		{
-			if (vertOK) // if the Vertical Axis is OK
-			{
-				cameraDistance = distance2D * 0.95f;
-			}
-			else// otherwise we need to move closer to not go into the floor/ceiling
-			{
-				cameraDistance = abs(diff.z) * 0.95f;
-			}
-		}
-		g_Input->m_fCameraInThirdPerson = true;
-
-		g_Input->m_vecCameraOffset.z = cameraDistance;
-	}
-	else
-	{
-		g_Input->m_fCameraInThirdPerson = false;
-	}
-}
+//void Visuals::ThirdPerson() {
+//	if (!g_LocalPlayer)
+//		return;
+//
+//	if (g_Options.misc_thirdperson && g_LocalPlayer->IsAlive())
+//	{
+//		if (!g_Input->m_fCameraInThirdPerson)
+//		{
+//			g_Input->m_fCameraInThirdPerson = true;
+//		}
+//
+//		float dist = g_Options.misc_thirdperson_dist;
+//
+//		QAngle *view = g_LocalPlayer->GetVAngles();
+//		trace_t tr;
+//		Ray_t ray;
+//
+//		Vector desiredCamOffset = Vector(cos(DEG2RAD(view->yaw)) * dist,
+//			sin(DEG2RAD(view->yaw)) * dist,
+//			sin(DEG2RAD(-view->pitch)) * dist
+//		);
+//
+//		//cast a ray from the Current camera Origin to the Desired 3rd person Camera origin
+//		ray.Init(g_LocalPlayer->GetEyePos(), (g_LocalPlayer->GetEyePos() - desiredCamOffset));
+//		CTraceFilter traceFilter;
+//		traceFilter.pSkip = g_LocalPlayer;
+//		g_EngineTrace->TraceRay(ray, MASK_SHOT, &traceFilter, &tr);
+//
+//		Vector diff = g_LocalPlayer->GetEyePos() - tr.endpos;
+//
+//		float distance2D = sqrt(abs(diff.x * diff.x) + abs(diff.y * diff.y));// Pythagorean
+//
+//		bool horOK = distance2D > (dist - 2.0f);
+//		bool vertOK = (abs(diff.z) - abs(desiredCamOffset.z) < 3.0f);
+//
+//		float cameraDistance;
+//
+//		if (horOK && vertOK)  // If we are clear of obstacles
+//		{
+//			cameraDistance = dist; // go ahead and set the distance to the setting
+//		}
+//		else
+//		{
+//			if (vertOK) // if the Vertical Axis is OK
+//			{
+//				cameraDistance = distance2D * 0.95f;
+//			}
+//			else// otherwise we need to move closer to not go into the floor/ceiling
+//			{
+//				cameraDistance = abs(diff.z) * 0.95f;
+//			}
+//		}
+//		g_Input->m_fCameraInThirdPerson = true;
+//
+//		g_Input->m_vecCameraOffset.z = cameraDistance;
+//	}
+//	else
+//	{
+//		g_Input->m_fCameraInThirdPerson = false;
+//	}
+//}
 
 void Visuals::AddToDrawList() {
 	for (auto i = 1; i <= g_EntityList->GetHighestEntityIndex(); ++i) {

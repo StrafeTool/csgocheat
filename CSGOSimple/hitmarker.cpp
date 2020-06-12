@@ -3,6 +3,7 @@
 #include "options.hpp"
 #pragma comment(lib, "winmm.lib")
 #include "hooks.hpp"
+#include "features/ragebot.h"
 
 void HitMarkerEvent::FireGameEvent(IGameEvent* event)
 {
@@ -100,6 +101,57 @@ void HitMarkerEvent::Paint(void)
 		}
 	}
 }
+void BulletImpactEvent::log_damage(C_BasePlayer* player, int damage, int hitgroup)
+{
+	if (!g_Options.esp_enabled)
+		return;
+
+	std::string hitgroup_str;
+
+	switch (hitgroup)
+	{
+	case HITBOX_HEAD:
+	case HITBOX_NECK:
+		hitgroup_str = ("HEAD");
+		break;
+
+	case HITBOX_PELVIS:
+	case HITBOX_STOMACH:
+	case HITBOX_LOWER_CHEST:
+	case HITBOX_CHEST:
+	case HITBOX_UPPER_CHEST:
+		hitgroup_str = ("BODY");
+		break;
+
+	case HITBOX_RIGHT_THIGH:
+	case HITBOX_LEFT_THIGH:
+	case HITBOX_RIGHT_CALF:
+	case HITBOX_LEFT_CALF:
+	case HITBOX_RIGHT_FOOT:
+	case HITBOX_LEFT_FOOT:
+		hitgroup_str = ("FOOT");
+		break;
+
+	case HITBOX_RIGHT_HAND:
+	case HITBOX_LEFT_HAND:
+	case HITBOX_RIGHT_UPPER_ARM:
+	case HITBOX_RIGHT_FOREARM:
+	case HITBOX_LEFT_UPPER_ARM:
+	case HITBOX_LEFT_FOREARM:
+		hitgroup_str = ("ARM");
+		break;
+	}
+
+	//debug_console::print(
+	//	xor_str("hit player \"") + std::string(player->get_player_info().sz_name) + xor_str("\" for ") + std::to_string(damage) +
+	//	xor_str(" damage in the ") + hitgroup_str);
+	//logs.push_back({
+	//	xor_str("hit player \"") + std::string(player->get_player_info().sz_name) + xor_str("\" for ") + std::to_string(damage) +
+	//	xor_str(" damage in the ") + hitgroup_str,
+	//	interfaces::global_vars->realtime
+	//	});
+	//logs.push_back ( { xor_str ( "hit player \"" ) + std::string ( player->get_player_info().sz_name ) + xor_str ( "\" for " ) + std::to_string ( damage ) + xor_str ( " damage in the " ) + hitgroup_str, interfaces::global_vars->realtime } );
+}
 
 void BulletImpactEvent::FireGameEvent(IGameEvent* event)
 {
@@ -123,6 +175,58 @@ void BulletImpactEvent::FireGameEvent(IGameEvent* event)
 	x = event->GetFloat("x");
 	y = event->GetFloat("y");
 	z = event->GetFloat("z");
+
+
+	static auto last_hurt_curtime = 0.f;
+	static auto last_hurt_attacker = -1;
+	static auto last_hurt_userid = -1;
+	static auto last_hurt_damage = -1;
+	static auto last_hurt_health = -1;
+	static auto last_hurt_hitgroup = 0;
+	static int OldShotsFired[65];
+	if (strstr(event->GetName(), "player_hurt"))
+	{
+		C_BasePlayer* Attacker =
+			C_BasePlayer::GetPlayerByIndex(g_EngineClient->GetPlayerForUserID(event->GetInt("attacker")));
+
+		C_BasePlayer* Victim = C_BasePlayer::GetPlayerByIndex(g_EngineClient->GetPlayerForUserID(event->GetInt("userid")));
+
+		if (Attacker == g_LocalPlayer && Victim != g_LocalPlayer)
+		{
+			if (RageAimbot::Get().ShotsFired[Victim->EntIndex()] != OldShotsFired[Victim->EntIndex()])
+			{
+				RageAimbot::Get().ShotsHit[Victim->EntIndex()] += 1;
+
+				OldShotsFired[Victim->EntIndex()] = RageAimbot::Get().ShotsFired[Victim->EntIndex()];
+			}
+		}
+	}
+
+
+	if (!strcmp(event->GetName(),("player_hurt")))
+	{
+		const auto attacker = g_EngineClient->GetPlayerForUserID(event->GetInt(("attacker")));
+		const auto hurt = g_EngineClient->GetPlayerForUserID(event->GetInt(("userid")));
+		const auto health = event->GetInt(("health"));
+		const auto dmg_health = event->GetInt(("dmg_health"));
+		const auto hitgroup = event->GetInt(("hitgroup"));
+		if (last_hurt_curtime == g_GlobalVars->curtime && last_hurt_attacker == attacker
+			&& last_hurt_userid == hurt && last_hurt_damage == dmg_health
+			&& last_hurt_health == health && last_hurt_hitgroup == hitgroup)
+			return;
+
+
+		last_hurt_curtime = g_GlobalVars->curtime;
+		last_hurt_attacker = attacker;
+		last_hurt_userid = hurt;
+		last_hurt_damage = dmg_health;
+		last_hurt_health = health;
+		last_hurt_hitgroup = hitgroup;
+
+	}
+
+
+
 }
 
 

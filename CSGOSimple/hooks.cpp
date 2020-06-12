@@ -15,9 +15,13 @@
 #include "hitmarker.hpp"
 #include "features/antiaim.hpp"
 #include "features/triggerbot.h"
+#include "features/engineprediction.hpp"
+#include "features/tickbase.h"
 #pragma intrinsic(_ReturnAddress)  
 
 namespace Hooks {
+
+
 
 	void Initialize()
 	{
@@ -39,6 +43,7 @@ namespace Hooks {
 		sound_hook.hook_index(index::EmitSound1, hkEmitSound1);
 		vguisurf_hook.hook_index(index::LockCursor, hkLockCursor);
 		mdlrender_hook.hook_index(index::DrawModelExecute, hkDrawModelExecute);
+		//hlclient_hook.hook_index(index::hkWriteUsercmdDeltaToBuffer, hkWriteUsercmdDeltaToBuffer);
 		clientmode_hook.hook_index(index::DoPostScreenSpaceEffects, hkDoPostScreenEffects);
 		clientmode_hook.hook_index(index::OverrideView, hkOverrideView);
 		sv_cheats.hook_index(index::SvCheatsGetBool, hkSvCheatsGetBool);
@@ -58,6 +63,18 @@ namespace Hooks {
 		sv_cheats.unhook_all();
 
 		Glow::Get().Shutdown();
+	}
+	void WriteUsercmd(bf_write* m_pBuffer, CUserCmd* m_pIncoming, CUserCmd* m_pOutgoing)
+	{
+		static DWORD dwWriteUsercmd = (DWORD)Utils::PatternScan(GetModuleHandleA("client.dll"), "55 8B EC 83 E4 F8 51 53 56 8B D9 8B 0D");
+		__asm
+		{
+			mov     ecx, m_pBuffer
+			mov     edx, m_pIncoming
+			push    m_pOutgoing
+			call    dwWriteUsercmd
+			add     esp, 4
+		}
 	}
 	//--------------------------------------------------------------------------------
 	long __stdcall hkEndScene(IDirect3DDevice9* pDevice)
@@ -168,6 +185,61 @@ namespace Hooks {
 	}
 
 
+
+
+	bool __fastcall hkWriteUsercmdDeltaToBuffer(IBaseClientDLL* ecx, void*, int m_nSlot, bf_write* m_pBuffer, int m_nFrom, int m_nTo, bool m_bNewCmd)
+	{
+		static auto oFunc = hlclient_hook.get_original< bool(__thiscall*)(IBaseClientDLL*, int, bf_write*, int, int, bool) >(24);
+		int m_nTickbase = g_ViolanesPaster.g_nTickbase;
+		if (m_nTickbase >= 0)
+			return oFunc(ecx, m_nSlot, m_pBuffer, m_nFrom, m_nTo, m_bNewCmd);
+
+		if (m_nFrom != -1)
+			return true;
+
+		g_ViolanesPaster.g_nTickbase = 0;
+		m_nFrom = -1;
+
+		*(int*)((uintptr_t)m_pBuffer - 0x30) = 0;
+		int* m_pnNewCmds = (int*)((uintptr_t)m_pBuffer - 0x2C);
+
+		int m_nNewCmds = *m_pnNewCmds;
+		int m_nNextCmd = g_ClientState->m_nChokedCmds + g_ClientState->m_nLastOutgoingCmd + 1;
+		int m_nTotalNewCmds = std::min(m_nNewCmds + abs(m_nTickbase), 62);
+
+		*m_pnNewCmds = m_nTotalNewCmds;
+
+		for (m_nTo = m_nNextCmd - m_nNewCmds + 1; m_nTo <= m_nNextCmd; m_nTo++)
+		{
+			if (!oFunc(ecx, m_nSlot, m_pBuffer, m_nFrom, m_nTo, true))
+				return false;
+
+			m_nFrom = m_nTo;
+		}
+
+		CUserCmd* m_pCmd = g_Input->GetUserCmd(m_nSlot, m_nFrom);
+		if (!m_pCmd)
+			return true;
+
+		CUserCmd m_FromCmd = *m_pCmd, m_ToCmd = *m_pCmd;
+		m_ToCmd.tick_count += 200;
+		m_ToCmd.command_number++;
+
+		for (int i = m_nNewCmds; i <= m_nTotalNewCmds; i++)
+		{
+			WriteUsercmd(m_pBuffer, &m_ToCmd, &m_FromCmd);
+			m_FromCmd = m_ToCmd;
+
+			m_ToCmd.command_number++;
+			m_ToCmd.tick_count++;
+		}
+
+		return true;
+	}
+
+
+
+
 	C_BasePlayer* pLocal2;
 	void __stdcall hkCreateMove(int sequence_number, float input_sample_frametime, bool active, bool& bSendPacket)
 	{
@@ -180,7 +252,11 @@ namespace Hooks {
 
 		if (!cmd || !cmd->command_number)
 			return;
-		
+		if (!g_ViolanesPaster.CanProcessPacket(cmd))
+		{
+			bSendPacket = false;
+			return;
+		}
 
 		C_BaseCombatWeapon* Weapon = g_LocalPlayer->m_hActiveWeapon();
 		if (Menu::Get().IsVisible())
@@ -189,58 +265,82 @@ namespace Hooks {
 		if (g_Options.misc_bhop)
 		{
 			BunnyHop::OnCreateMove(cmd);
+			if(g_Options.legit_enable)
 			BunnyHop::AutoStrafe(cmd);
+			else if (g_Options.rage_enable)
+			BunnyHop::ragestrafer(cmd);
 		}
-
-		MovementFix::Get().Start(cmd);
-		//RageAimbot::Get().StartEnginePred(cmd);
-
-		RageAimbot::Get().Do(cmd, Weapon, bSendPacket);
-		LegitAimbot::Get().Do(cmd, Weapon);
-
-	//	RageAimbot::Get().EndEnginePred();
-		MovementFix::Get().End(cmd);
+		
+		PredictionSystem::Get().Start(cmd, g_LocalPlayer);
+		g_ViolanesPaster.g_nTicks = cmd->tick_count;
 		if (g_Options.misc_fakelag)
 			antiaim::Get().createmove(cmd, bSendPacket);
-
-		if (g_Options.misc_lefthand_knife) {
-
-			if (!g_EngineClient->IsConnected() || !g_EngineClient->IsInGame())
-				return;
-
-			if (g_LocalPlayer->m_hActiveWeapon()->IsKnifeorNade())
-			{
-				g_EngineClient->ClientCmd_Unrestricted("cl_righthand 1");
-			}
-			else
-			{
-				g_EngineClient->ClientCmd_Unrestricted("cl_righthand 0");
-			}
-		}
-			
-		//backtrack.update();
-	
+		//PredictionSystem::Get().Start(cmd, g_LocalPlayer);
 		
+			if (g_Options.rage_enable)
+			{
+				if (g_Options.legit_enable)
+					g_Options.legit_enable, false;
+				if (g_Options.misc_backtrack)
+					g_Options.misc_backtrack, false;
+				/*	if (Variables.LegitAntiaimEnabled)
+						Variables.LegitAntiaimEnabled = false;*/
+			}
+			if (g_Options.RageAntiaimEnabled)
+			{
+				g_ViolanesPaster.DoubleTap(cmd, &bSendPacket);
+				
+				MovementFix::Get().Start(cmd);
+				RageAimbot::Get().DoAntiaim(cmd, Weapon, bSendPacket);
+				MovementFix::Get().End(cmd);
+			}
 
+			if (g_Options.rage_enable)
+			{
+				/*	if (g_Options.RageAimbotResolver)
+					RageAimbot::Get().AntiFreestanding();*/
+				RageAimbot::Get().Do(cmd, Weapon, bSendPacket);
+			}
+
+			if (g_Options.legit_enable)
+				LegitAimbot::Get().Do(cmd, Weapon);
+
+
+		g_ViolanesPaster.ShiftTickbase(cmd, bSendPacket);
+		PredictionSystem::Get().End(g_LocalPlayer);
 		// https://github.com/spirthack/CSGOSimple/issues/69
 		if (g_Options.misc_showranks && cmd->buttons & IN_SCORE) // rank revealer will work even after unhooking, idk how to "hide" ranks  again
 			g_CHLClient->DispatchUserMessage(CS_UM_ServerRankRevealAll, 0, 0, nullptr);
 
-	
+		if (bSendPacket)
+		{
+			RageAimbot::Get().RealAngle = cmd->viewangles;
+		}
+		else
+		{
+			RageAimbot::Get().FakeAngle = cmd->viewangles;
+		}
+
+
 		//clamping movement
 		cmd->forwardmove = std::clamp(cmd->forwardmove, -450.0f, 450.0f);
 		cmd->sidemove = std::clamp(cmd->sidemove, -450.0f, 450.0f);
 		cmd->upmove = std::clamp(cmd->upmove, -450.0f, 450.0f);
 
-		// clamping angles
-		cmd->viewangles.pitch = std::clamp(cmd->viewangles.pitch, -89.0f, 89.0f);
-		cmd->viewangles.yaw = std::clamp(cmd->viewangles.yaw, -180.0f, 180.0f);
-		cmd->viewangles.roll = 0.0f;
+		//// clamping angles
+		//cmd->viewangles.pitch = std::clamp(cmd->viewangles.pitch, -89.0f, 89.0f);
+		//cmd->viewangles.yaw = std::clamp(cmd->viewangles.yaw, -180.0f, 180.0f);
+		//cmd->viewangles.roll = 0.0f;
 
 
 
 		verified->m_cmd = *cmd;
 		verified->m_crc = cmd->GetChecksum();
+
+		//Prediction::StartPrediction(cmd, g_LocalPlayer);
+		//{
+
+		//}Prediction::EndPrediction(g_LocalPlayer);
 	}
 	//--------------------------------------------------------------------------------
 	__declspec(naked) void __fastcall hkCreateMove_Proxy(void* _this, int, int sequence_number, float input_sample_frametime, bool active)
@@ -350,15 +450,149 @@ namespace Hooks {
 		if (g_EngineClient->IsInGame() && g_EngineClient->IsConnected()) 
 			Visuals::Get().NightMode();		
 
-		/*Visuals::Get().ScopeLine();*/
+		/*
+Visuals::Get().ScopeLine();*/
+		std::vector<const char*> smoke_materials = {
+"particle/beam_smoke_01",
+"particle/particle_smokegrenade",
+"particle/particle_smokegrenade1",
+"particle/particle_smokegrenade2",
+"particle/particle_smokegrenade3",
+"particle/particle_smokegrenade_sc",
+"particle/smoke1/smoke1",
+"particle/smoke1/smoke1_ash",
+"particle/smoke1/smoke1_nearcull",
+"particle/smoke1/smoke1_nearcull2",
+"particle/smoke1/smoke1_snow",
+"particle/smokesprites_0001",
+"particle/smokestack",
+"particle/vistasmokev1/vistasmokev1",
+"particle/vistasmokev1/vistasmokev1_emods",
+"particle/vistasmokev1/vistasmokev1_emods_impactdust",
+"particle/vistasmokev1/vistasmokev1_fire",
+"particle/vistasmokev1/vistasmokev1_nearcull",
+"particle/vistasmokev1/vistasmokev1_nearcull_fog",
+"particle/vistasmokev1/vistasmokev1_nearcull_nodepth",
+"particle/vistasmokev1/vistasmokev1_smokegrenade",
+"particle/vistasmokev1/vistasmokev4_emods_nocull",
+"particle/vistasmokev1/vistasmokev4_nearcull",
+"particle/vistasmokev1/vistasmokev4_nocull"
+		};
 
+		if (stage == FRAME_NET_UPDATE_START)
+		{
+
+
+			if (g_EngineClient->IsInGame() && g_EngineClient->IsConnected())
+			{
+				for (auto material_name : smoke_materials) {
+					IMaterial* mat = g_MatSystem->FindMaterial(material_name, TEXTURE_GROUP_OTHER);
+					mat->SetMaterialVarFlag(MATERIAL_VAR_WIREFRAME, g_Options.misc_nosmoke ? true : false);
+				}
+				if (g_Options.misc_nosmoke) {
+					static auto smokecount = *(DWORD*)(Utils::PatternScan(GetModuleHandleW(L"client.dll"), "55 8B EC 83 EC 08 8B 15 ? ? ? ? 0F 57 C0") + 0x8);
+					//static int* smokecount = *(int**)(Utils::PatternScan("client.dll", "8B 1D ? ? ? ? 56 33 F6 57 85 DB") + 0x2);
+					if (!smokecount)
+						return;
+					*(int*)(smokecount) = 0;
+				}
+			}
+		}
+
+		if (stage == FRAME_RENDER_START)
+		{
+			for (int i = 1; i <= 64; i++)
+			{
+				C_BasePlayer* Player = C_BasePlayer::GetPlayerByIndex(i);
+				if (!Player || !Player->IsPlayer() || Player == g_LocalPlayer) continue;
+
+				*(int*)((uintptr_t)Player + 0xA30) = g_GlobalVars->framecount;
+				*(int*)((uintptr_t)Player + 0xA28) = 0;
+			}
+		
+
+			if (g_Options.misc_thirdperson)
+			{
+				static bool enabledtp = false, check = false;
+
+				if (GetKeyState(0x56) && g_LocalPlayer->IsAlive())
+				{			
+					if (!check)
+						enabledtp = !enabledtp;
+					check = true;
+				}
+				else
+					check = false;
+				if (enabledtp)
+				{
+					*(QAngle*)((DWORD)g_LocalPlayer.operator->() + 0x31D8) = RageAimbot::Get().RealAngle;
+				}
+				if (g_Input->m_fCameraInThirdPerson)
+				{
+					//    I::Prediction1->set_local_viewangles_rebuilt(LastAngleAAReal);
+					QAngle viewangs = *(QAngle*)((DWORD)g_LocalPlayer.operator->() + 0x31D8); viewangs = RageAimbot::Get().RealAngle;
+				}
+				if (enabledtp && g_LocalPlayer->IsAlive())
+				{
+					if (!g_Input->m_fCameraInThirdPerson)
+					{
+						g_Input->m_fCameraInThirdPerson = true;
+						Vector camForward;
+					}
+				}
+				else
+				{
+					g_Input->m_fCameraInThirdPerson = false;
+				}
+				if (g_Input->m_fCameraInThirdPerson)
+				{
+					*(QAngle*)((DWORD)g_LocalPlayer.operator->() + 0x31D8) = RageAimbot::Get().RealAngle;
+				}
+			}
+
+			RageAimbot::Get().LocalAnimationFix(g_LocalPlayer);
+
+
+
+
+		}
+		if (stage == FRAME_NET_UPDATE_POSTDATAUPDATE_END)
+		{
+			for (int i = 1; i <= 64; i++)
+			{
+				C_BasePlayer* Player = C_BasePlayer::GetPlayerByIndex(i);
+				if (!Player
+					|| !Player->IsAlive())
+					continue;
+				if (Player->IsDormant())
+					continue;
+
+				VarMapping_t* map = (VarMapping_t*)((uintptr_t)Player + 36);
+
+				for (int i = 0; i < map->m_nInterpolatedEntries; i++)
+				{
+					VarMapEntry_t* e = &map->m_Entries[i];
+
+					if (!e)
+						continue;
+
+					e->m_bNeedsToInterpolate = false;
+				}
+			}
+		}
 		if (g_Options.misc_grenadepreview && g_EngineClient->IsInGame() && g_EngineClient->IsConnected()) {
 			static auto grenadepre = g_CVar->FindVar("cl_grenadepreview");
 			grenadepre->SetValue(1);
 		}
 
-	/*	if (stage == FRAME_NET_UPDATE_END && g_EngineClient->IsInGame()) 
-			backtrack.update();*/
+		if (stage == FRAME_NET_UPDATE_END)
+		{
+			
+			if (g_Options.rage_enable)
+			RageAimbot::Get().AnimationFix();
+			RageAimbot::Get().StoreRecords();
+		}
+			
 
 		ofunc(g_CHLClient, edx, stage);
 	}
@@ -367,8 +601,8 @@ namespace Hooks {
 	{
 		static auto ofunc = clientmode_hook.get_original<decltype(&hkOverrideView)>(index::OverrideView);
 
-		if (g_EngineClient->IsInGame() && vsView)
-			Visuals::Get().ThirdPerson();
+		/*if (g_EngineClient->IsInGame() && vsView)
+			Visuals::Get().ThirdPerson();*/
 
 		ofunc(g_ClientMode, edx, vsView);
 	}

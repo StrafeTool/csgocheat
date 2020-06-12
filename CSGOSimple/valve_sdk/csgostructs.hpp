@@ -4,10 +4,19 @@
 #include <array>
 #include "../helpers/utils.hpp"
 
+#define TICK_INTERVAL g_GlobalVars->interval_per_tick
+#define TIME_TO_TICKS( dt )		( (int)( 0.5f + (float)(dt) / TICK_INTERVAL ) )
+#define TICKS_TO_TIME( t )		( TICK_INTERVAL *( t ) )
+
 #define NETVAR(type, name, table, netvar)                           \
     type& name##() const {                                          \
         static int _##name = NetvarSys::Get().GetOffset(table, netvar);     \
         return *(type*)((uintptr_t)this + _##name);                 \
+    }
+
+#define OFFSET(type, name, offset)                           \
+    type& name##() const {                                          \
+        return *(type*)((uintptr_t)this + offset);                 \
     }
 
 #define PNETVAR(type, name, table, netvar)                           \
@@ -28,6 +37,77 @@ class CBasePlayerAnimState;
 class CCSGOPlayerAnimState;
 class C_BaseEntity;
 
+class AnimationLayer {
+public:
+	char  pad_0000[20];
+	// These should also be present in the padding, don't see the use for it though
+	//float	m_flLayerAnimtime;
+	//float	m_flLayerFadeOuttime;
+	unsigned int m_nOrder; //0x0014
+	unsigned int m_nSequence; //0x0018
+	float m_flPrevCycle; //0x001C
+	float m_flWeight; //0x0020
+	float m_flWeightDeltaRate; //0x0024
+	float m_flPlaybackRate; //0x0028
+	float m_flCycle; //0x002C
+	void* m_pOwner; //0x0030 // player's thisptr
+	char  pad_0038[4]; //0x0034
+}; //Size: 0x0038
+class CBasePlayerAnimState
+{
+public:
+	char pad[4];
+	char bUnknown; //0x4
+	char pad2[91];
+	void* pBaseEntity; //0x60
+	void* pActiveWeapon; //0x64
+	void* pLastActiveWeapon; //0x68
+	float m_flLastClientSideAnimationUpdateTime; //0x6C
+	int m_iLastClientSideAnimationUpdateFramecount; //0x70
+	float m_flEyePitch; //0x74
+	float m_flEyeYaw; //0x78
+	float m_flPitch; //0x7C
+	float m_flGoalFeetYaw; //0x80
+	float m_flCurrentFeetYaw; //0x84
+	float m_flCurrentTorsoYaw; //0x88
+	float m_flUnknownVelocityLean; //0x8C //changes when moving/jumping/hitting ground
+	float m_flLeanAmount; //0x90
+	char pad4[4]; //NaN
+	float m_flFeetCycle; //0x98 0 to 1
+	float m_flFeetYawRate; //0x9C 0 to 1
+	float m_fUnknown2;
+	float m_fDuckAmount; //0xA4
+	float m_fLandingDuckAdditiveSomething; //0xA8
+	float m_fUnknown3; //0xAC
+	Vector m_vOrigin; //0xB0, 0xB4, 0xB8
+	Vector m_vLastOrigin; //0xBC, 0xC0, 0xC4
+	float m_vVelocityX; //0xC8
+	float m_vVelocityY; //0xCC
+	char pad5[4];
+	float m_flUnknownFloat1; //0xD4 Affected by movement and direction
+	char pad6[8];
+	float m_flUnknownFloat2; //0xE0 //from -1 to 1 when moving and affected by direction
+	float m_flUnknownFloat3; //0xE4 //from -1 to 1 when moving and affected by direction
+	float m_unknown; //0xE8
+	float speed_2d; //0xEC
+	float flUpVelocity; //0xF0
+	float m_flSpeedNormalized; //0xF4 //from 0 to 1
+	float m_flFeetSpeedForwardsOrSideWays; //0xF8 //from 0 to 2. something  is 1 when walking, 2.something when running, 0.653 when crouch walking
+	float m_flFeetSpeedUnknownForwardOrSideways; //0xFC //from 0 to 3. something
+	float m_flTimeSinceStartedMoving; //0x100
+	float m_flTimeSinceStoppedMoving; //0x104
+	unsigned char m_bOnGround; //0x108
+	unsigned char m_bInHitGroundAnimation; //0x109
+	char pad7[10];
+	float m_flLastOriginZ; //0x114
+	float m_flHeadHeightOrOffsetFromHittingGroundAnimation; //0x118 from 0 to 1, is 1 when standing
+	float m_flStopToFullRunningFraction; //0x11C from 0 to 1, doesnt change when walking or crouching, only running
+	char pad8[4]; //NaN
+	float m_flUnknownFraction; //0x124 affected while jumping and running, or when just jumping, 0 to 1
+	char pad9[4]; //NaN
+	float m_flUnknown3;
+	char pad10[528];
+};
 enum CSWeaponType
 {
 	WEAPONTYPE_KNIFE = 0,
@@ -42,7 +122,24 @@ enum CSWeaponType
 	WEAPONTYPE_GRENADE,
 	WEAPONTYPE_UNKNOWN
 };
+class VarMapEntry_t {
+public:
+	unsigned short type;
+	unsigned short m_bNeedsToInterpolate; // Set to false when this var doesn't
+										  // need Interpolate() called on it anymore.
+	void* data;
+	void* watcher;
+};
 
+struct VarMapping_t {
+	VarMapping_t() {
+		m_nInterpolatedEntries = 0;
+	}
+
+	VarMapEntry_t* m_Entries;
+	int m_nInterpolatedEntries;
+	float m_lastInterpolationTime;
+};
 class C_BaseEntity;
 
 // Created with ReClass.NET by KN4CK3R
@@ -79,13 +176,13 @@ public:
 class C_BaseEntity : public IClientEntity
 {
 public:
-	datamap_t * GetDataDescMap() {
-		typedef datamap_t*(__thiscall *o_GetPredDescMap)(void*);
+	datamap_t* GetDataDescMap() {
+		typedef datamap_t* (__thiscall* o_GetPredDescMap)(void*);
 		return CallVFunction<o_GetPredDescMap>(this, 15)(this);
 	}
 
-	datamap_t *GetPredDescMap() {
-		typedef datamap_t*(__thiscall *o_GetPredDescMap)(void*);
+	datamap_t* GetPredDescMap() {
+		typedef datamap_t* (__thiscall* o_GetPredDescMap)(void*);
 		return CallVFunction<o_GetPredDescMap>(this, 17)(this);
 	}
 	static __forceinline C_BaseEntity* GetEntityByIndex(int index) {
@@ -116,8 +213,6 @@ public:
 	bool IsWeapon();
 	bool IsPlantedC4();
 	bool IsDefuseKit();
-	//bool IsNade();
-	void FixSetupBones(matrix3x4_t* Matrix);
 	//bool isSpotted();
 };
 
@@ -168,8 +263,8 @@ public:
 	NETVAR(float_t, m_flNextPrimaryAttack, "DT_BaseCombatWeapon", "m_flNextPrimaryAttack");
 	NETVAR(float_t, m_flNextSecondaryAttack, "DT_BaseCombatWeapon", "m_flNextSecondaryAttack");
 	NETVAR(int32_t, m_iClip1, "DT_BaseCombatWeapon", "m_iClip1");
-	NETVAR(int32_t, m_iPrimaryReserveAmmoCount, "DT_BaseCombatWeapon", "m_iPrimaryReserveAmmoCount");
 	NETVAR(int32_t, m_iClip2, "DT_BaseCombatWeapon", "m_iClip2");
+	NETVAR(int32_t, m_iPrimaryReserveAmmoCount, "DT_BaseCombatWeapon", "m_iPrimaryReserveAmmoCount");
 	NETVAR(float_t, m_flRecoilIndex, "DT_WeaponCSBase", "m_flRecoilIndex");
 	NETVAR(int32_t, m_iViewModelIndex, "DT_BaseCombatWeapon", "m_iViewModelIndex");
 	NETVAR(int32_t, m_iWorldModelIndex, "DT_BaseCombatWeapon", "m_iWorldModelIndex");
@@ -178,22 +273,20 @@ public:
 	NETVAR(float_t, m_fThrowTime, "DT_BaseCSGrenade", "m_fThrowTime");
 	NETVAR(float_t, m_flPostponeFireReadyTime, "DT_BaseCombatWeapon", "m_flPostponeFireReadyTime");
 	NETVAR(CHandle<C_BaseWeaponWorldModel>, m_hWeaponWorldModel, "DT_BaseCombatWeapon", "m_hWeaponWorldModel");
+	NETVAR(float_t, m_fLastShotTime, "DT_WeaponCSBase", "m_fLastShotTime");
 
+	float GetPostPoneReadyTime()
+	{
+		return *(float*)((DWORD)this + NetvarSys::Get().GetOffset("DT_WeaponCSBase", "m_flPostponeFireReadyTime"));
+	}
 
 	CCSWeaponInfo* GetCSWeaponData();
-	std::string GetName()
-	{
-		///TODO: Test if szWeaponName returns proper value for m4a4 / m4a1-s or it doesnt recognize them.
-		return std::string(this->GetCSWeaponData()->szWeaponName);
-	}
 	bool HasBullets();
 	bool CanFire();
-	bool IsGrenade();
 	bool IsZeus();
+	bool IsGrenade();
 	bool IsKnife();
-
-	bool IsKnifeorNade();
-
+	bool IsAWPScout();
 	bool IsReloading();
 	bool IsRifle();
 	bool IsPistol();
@@ -204,7 +297,10 @@ public:
 	void UpdateAccuracyPenalty();
 	CUtlVector<IRefCounted*>& m_CustomMaterials();
 	bool* m_bCustomMaterialInitialized();
-
+	float GetMaxSpeed()
+	{
+		return *(float*)((uintptr_t)this->GetCSWeaponData() + 0x0130);
+	}
 };
 
 class C_BasePlayer : public C_BaseEntity
@@ -231,24 +327,21 @@ public:
 		static SetAbsOriginFn SetAbsOrigin = (SetAbsOriginFn)Utils::PatternScan(GetModuleHandleA("client.dll"), "55 8B EC 83 E4 F8 51 53 56 57 8B F1 E8");
 		SetAbsOrigin(this, origin);
 	}
-	Vector& GetAbsAngles()
+	QAngle& GetAbsAngles()
 	{
 		if (!this)
-			return Vector();
-		typedef Vector& (__thiscall* OriginalFn)(void*);
+			return QAngle();
+		typedef QAngle& (__thiscall* OriginalFn)(void*);
 		return CallVFunction<OriginalFn>(this, 11)(this);
 	}
-
-
 	NETVAR(bool, m_bHasDefuser, "DT_CSPlayer", "m_bHasDefuser");
 	NETVAR(bool, m_bGunGameImmunity, "DT_CSPlayer", "m_bGunGameImmunity");
 	NETVAR(int32_t, m_iShotsFired, "DT_CSPlayer", "m_iShotsFired");
 	NETVAR(QAngle, m_angEyeAngles, "DT_CSPlayer", "m_angEyeAngles[0]");
-	NETVAR(Vector, eyeangles, "DT_CSPlayer", "m_angEyeAngles[0]");
 	NETVAR(int, m_ArmorValue, "DT_CSPlayer", "m_ArmorValue");
 	NETVAR(bool, m_bHasHeavyArmor, "DT_CSPlayer", "m_bHasHeavyArmor");
 	NETVAR(bool, m_bHasHelmet, "DT_CSPlayer", "m_bHasHelmet");
-	NETVAR(bool, m_bIsScoped, "DT_CSPlayer", "m_bIsScoped");;
+	NETVAR(bool, m_bIsScoped, "DT_CSPlayer", "m_bIsScoped");
 	NETVAR(float, m_flLowerBodyYawTarget, "DT_CSPlayer", "m_flLowerBodyYawTarget");
 	NETVAR(int32_t, m_iHealth, "DT_BasePlayer", "m_iHealth");
 	NETVAR(int32_t, m_lifeState, "DT_BasePlayer", "m_lifeState");
@@ -267,9 +360,15 @@ public:
 	NETVAR(int32_t, m_iAccount, "DT_CSPlayer", "m_iAccount");
 	NETVAR(float, m_flFlashDuration, "DT_CSPlayer", "m_flFlashDuration");
 	NETVAR(float, m_flSimulationTime, "DT_BaseEntity", "m_flSimulationTime");
-	NETVAR(float, m_flCycle, "DT_BaseAnimating", "m_flCycle");
+	NETVAR(float, m_flCycle, "DT_ServerAnimationData", "m_flCycle");
 	NETVAR(int, m_nSequence, "DT_BaseViewModel", "m_nSequence");
+	PNETVAR(char, m_szLastPlaceName, "DT_BasePlayer", "m_szLastPlaceName");
+	NETPROP(m_flLowerBodyYawTargetProp, "DT_CSPlayer", "m_flLowerBodyYawTarget");
 	NETVAR(float, m_flNextAttack, "DT_BaseCombatCharacter", "m_flNextAttack");
+	OFFSET(uint32_t, get_most_recent_model_bone_counter, 0x2690);
+	OFFSET(float, get_last_bone_setup_time, 0x2924);
+	OFFSET(int, get_take_damage, 0x280);
+
 
 	//NETVAR(int, m_iAccount, "DT_CSPlayer", "m_iAccount");
 
@@ -278,7 +377,8 @@ public:
 	NETVAR(Vector, m_angAbsOrigin, "DT_BaseEntity", "m_angAbsOrigin");
 	NETVAR(float, m_flDuckSpeed, "DT_BaseEntity", "m_flDuckSpeed");
 	NETVAR(float, m_flDuckAmount, "DT_BaseEntity", "m_flDuckAmount");
-	std::array<float, 24> &m_flPoseParameter() const {
+	NETVAR(bool, client_animation, "DT_BaseAnimating", "m_bClientSideAnimation");
+	std::array<float, 24> m_flPoseParameter() {
 		static int _m_flPoseParameter = NetvarSys::Get().GetOffset("DT_BaseAnimating", "m_flPoseParameter");
 		return *(std::array<float, 24>*)((uintptr_t)this + _m_flPoseParameter);
 	}
@@ -286,31 +386,32 @@ public:
 
 	PNETVAR(CHandle<C_BaseCombatWeapon>, m_hMyWeapons, "DT_BaseCombatCharacter", "m_hMyWeapons");
 	PNETVAR(CHandle<C_BaseAttributableItem>, m_hMyWearables, "DT_BaseCombatCharacter", "m_hMyWearables");
-	PNETVAR(char, m_szLastPlaceName, "DT_BasePlayer", "m_szLastPlaceName");
 
-
-	NETPROP(m_flLowerBodyYawTargetProp, "DT_CSPlayer", "m_flLowerBodyYawTarget");
-	
 	CUserCmd*& m_pCurrentCommand();
+
+	int& get_take_damage();
 
 	/*gladiator v2*/
 	void InvalidateBoneCache();
 	int GetNumAnimOverlays();
-	AnimationLayer *GetAnimOverlays();
-	AnimationLayer *GetAnimOverlay(int i);
+	float m_flOldSimulationTime();
+	AnimationLayer* GetAnimOverlays();
+	AnimationLayer* GetAnimOverlay(int i);
+	void SetAbsAngles(QAngle angle);
 	int GetSequenceActivity(int sequence);
-	CCSGOPlayerAnimState *GetPlayerAnimState();
+	float MaxDesyncDelta();
+	CBasePlayerAnimState* GetPlayerAnimState();
 
-	static void UpdateAnimationState(CCSGOPlayerAnimState *state, QAngle angle);
-	static void ResetAnimationState(CCSGOPlayerAnimState *state);
-	void CreateAnimationState(CCSGOPlayerAnimState *state);
+	static void UpdateAnimationState(CBasePlayerAnimState* state, QAngle angle);
+	static void ResetAnimationState(CBasePlayerAnimState* state);
+	void CreateAnimationState(CBasePlayerAnimState* state);
 
-	float_t &m_surfaceFriction()
+	float_t& m_surfaceFriction()
 	{
 		static unsigned int _m_surfaceFriction = Utils::FindInDataMap(GetPredDescMap(), "m_surfaceFriction");
 		return *(float_t*)((uintptr_t)this + _m_surfaceFriction);
 	}
-	Vector &m_vecBaseVelocity()
+	Vector& m_vecBaseVelocity()
 	{
 		static unsigned int _m_vecBaseVelocity = Utils::FindInDataMap(GetPredDescMap(), "m_vecBaseVelocity");
 		return *(Vector*)((uintptr_t)this + _m_vecBaseVelocity);
@@ -319,14 +420,32 @@ public:
 	{
 		return (this->m_iTeamNum() != g_LocalPlayer->m_iTeamNum());
 	}
-
-	float_t &m_flMaxspeed()
+	float_t& m_flMaxspeed()
 	{
 		static unsigned int _m_flMaxspeed = Utils::FindInDataMap(GetPredDescMap(), "m_flMaxspeed");
 		return *(float_t*)((uintptr_t)this + _m_flMaxspeed);
 	}
+	uint32_t& m_iEFlags()
+	{
+		static unsigned int _m_iEFlags = Utils::FindInDataMap(GetPredDescMap(), "m_iEFlags");
+		return *(uint32_t*)((uintptr_t)this + _m_iEFlags);
+	}
+	Vector& m_vecAbsVelocity()
+	{
+		static unsigned int _m_vecAbsVelocity = Utils::FindInDataMap(GetPredDescMap(), "m_vecAbsVelocity");
+		return *(Vector*)((uintptr_t)this + _m_vecAbsVelocity);
+	}
 
+	bool SetupBones2(matrix3x4_t* pBoneToWorldOut, int nMaxBones, int boneMask, float currentTime)
+	{
+		auto backupval = *reinterpret_cast<uint8_t*>((uintptr_t)this + 0x274);
 
+		*reinterpret_cast<uint8_t*>((uintptr_t)this + 0x274) = 0;
+		bool setuped_bones = this->SetupBones(pBoneToWorldOut, nMaxBones, boneMask, currentTime);
+		*reinterpret_cast<uint8_t*>((uintptr_t)this + 0x274) = backupval;
+
+		return setuped_bones;
+	}
 
 
 	Vector        GetEyePos();
@@ -335,17 +454,18 @@ public:
 	bool		  IsFlashed();
 	bool          HasC4();
 	Vector        GetHitboxPos(int hitbox_id);
-	mstudiobbox_t * GetHitbox(int hitbox_id);
-	bool          GetHitboxPos(int hitbox, Vector &output);
-	Vector		  GetHitboxPos2(int hitbox_id, matrix3x4_t* boneMatrix);
-	//(int hitbox_id, matrix3x4_t* boneMatrix)
+	Vector		  GetHitboxPos(int hitbox_id, matrix3x4_t* boneMatrix);
+	Vector GetHitboxPos(int hitbox_id, matrix3x4_t* boneMatrix, float& Radius, Vector& Min, Vector& Max, int& Bone);
+	Vector			RotatedBonePos(int bone, float rotation);
+	mstudiobbox_t* GetHitbox(int hitbox_id);
+	bool          GetHitboxPos(int hitbox, Vector& output);
 	Vector        GetBonePos(int bone);
 	bool          CanSeePlayer(C_BasePlayer* player, int hitbox);
 	bool          CanSeePlayer(C_BasePlayer* player, const Vector& pos);
 	void UpdateClientSideAnimation();
 
 	int m_nMoveType();
-	QAngle * GetVAngles();
+	QAngle* GetVAngles();
 	float_t m_flSpawnTime();
 
 };
@@ -360,79 +480,6 @@ public:
 	NETPROP(m_nSequence, "DT_BaseViewModel", "m_nSequence");
 	void SendViewModelMatchingSequence(int sequence);
 };
-
-class AnimationLayer
-{
-public:
-	char  pad_0000[20];
-	// These should also be present in the padding, don't see the use for it though
-	//float	m_flLayerAnimtime;
-	//float	m_flLayerFadeOuttime;
-	uint32_t m_nOrder; //0x0014
-	uint32_t m_nSequence; //0x0018
-	float_t m_flPrevCycle; //0x001C
-	float_t m_flWeight; //0x0020
-	float_t m_flWeightDeltaRate; //0x0024
-	float_t m_flPlaybackRate; //0x0028
-	float_t m_flCycle; //0x002C
-	void *m_pOwner; //0x0030 // player's thisptr
-	char  pad_0038[4]; //0x0034
-}; //Size: 0x0038
-
-class CCSGOPlayerAnimState
-{
-public:
-	void* pThis;
-	char pad2[91];
-	void* pBaseEntity; //0x60
-	void* pActiveWeapon; //0x64
-	void* pLastActiveWeapon; //0x68
-	float m_flLastClientSideAnimationUpdateTime; //0x6C
-	int m_iLastClientSideAnimationUpdateFramecount; //0x70
-	float m_flEyePitch; //0x74
-	float m_flEyeYaw; //0x78
-	float m_flPitch; //0x7C
-	float m_flGoalFeetYaw; //0x80
-	float m_flCurrentFeetYaw; //0x84
-	float m_flCurrentTorsoYaw; //0x88
-	float m_flUnknownVelocityLean; //0x8C //changes when moving/jumping/hitting ground
-	float m_flLeanAmount; //0x90
-	char pad4[4]; //NaN
-	float m_flFeetCycle; //0x98 0 to 1
-	float m_flFeetYawRate; //0x9C 0 to 1
-	float m_fUnknown2;
-	float m_fDuckAmount; //0xA4
-	float m_fLandingDuckAdditiveSomething; //0xA8
-	float m_fUnknown3; //0xAC
-	Vector m_vOrigin; //0xB0, 0xB4, 0xB8
-	Vector m_vLastOrigin; //0xBC, 0xC0, 0xC4
-	float m_vVelocityX; //0xC8
-	float m_vVelocityY; //0xCC
-	char pad5[4];
-	float m_flUnknownFloat1; //0xD4 Affected by movement and direction
-	char pad6[8];
-	float m_flUnknownFloat2; //0xE0 //from -1 to 1 when moving and affected by direction
-	float m_flUnknownFloat3; //0xE4 //from -1 to 1 when moving and affected by direction
-	float m_unknown; //0xE8
-	float speed_2d; //0xEC
-	float flUpVelocity; //0xF0
-	float m_flSpeedNormalized; //0xF4 //from 0 to 1
-	float m_flFeetSpeedForwardsOrSideWays; //0xF8 //from 0 to 2. something  is 1 when walking, 2.something when running, 0.653 when crouch walking
-	float m_flFeetSpeedUnknownForwardOrSideways; //0xFC //from 0 to 3. something
-	float m_flTimeSinceStartedMoving; //0x100
-	float m_flTimeSinceStoppedMoving; //0x104
-	unsigned char m_bOnGround; //0x108
-	unsigned char m_bInHitGroundAnimation; //0x109
-	char pad7[10];
-	float m_flLastOriginZ; //0x114
-	float m_flHeadHeightOrOffsetFromHittingGroundAnimation; //0x118 from 0 to 1, is 1 when standing
-	float m_flStopToFullRunningFraction; //0x11C from 0 to 1, doesnt change when walking or crouching, only running
-	char pad8[4]; //NaN
-	float m_flUnknownFraction; //0x124 affected while jumping and running, or when just jumping, 0 to 1
-	char pad9[4]; //NaN
-	float m_flUnknown3;
-	char pad10[528];
-}; //Size=0x344
 
 class DT_CSPlayerResource
 {

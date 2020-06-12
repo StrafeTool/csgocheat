@@ -31,7 +31,27 @@ public:
 		//rage
 		OPTION(float, RageAimbotMinDmg, 30);
 		OPTION(float, RageAimbotHitchance, 60);
-		OPTION(bool, rage_enable, true);
+		OPTION(bool, rage_sloswalk, false);
+		OPTION(bool, rage_enable, false);
+		OPTION(bool, rage_silent, false);
+		OPTION(bool, hideshots, false);
+		OPTION(bool, doubletap, false);
+
+		OPTION(bool, RageAimbotHead, false);
+		OPTION(bool, RageAimbotBody, false);
+		OPTION(bool, RageAimbotLegs, false);
+		OPTION(bool, RageAimbotToes, false);
+		OPTION(bool, RageAimbotSafePoint, false);
+		OPTION(bool, RageAimbotDelayShot,  false);
+		OPTION(bool, RageAntiaimEnabled, false);
+		OPTION(bool, RageAimbotResolver, false);
+
+		OPTION(int, RageAimbotBaimAfter, 2);
+
+		OPTION(int, RageAimbotHeadScale, 40);
+		OPTION(int, RageAimbotBodyScale, 60);
+
+	//	RageAimbotBaimAfter
 
 
 		//legit
@@ -58,6 +78,7 @@ public:
 		OPTION(bool, esp_defuse_kit, false);
 		OPTION(bool, esp_planted_c4, true);
 		OPTION(bool, esp_items, false);
+		OPTION(bool, misc_nosmoke, false);
 
 		// 
 		// GLOW
@@ -74,7 +95,7 @@ public:
 		//
 		// CHAMS
 		//
-		OPTION(bool, chams_player_enabled, true);
+		OPTION(bool, chams_player_enabled, false);
 		OPTION(bool, chams_player_enemies_only, true);
 		OPTION(bool, chams_player_wireframe, false);
 		OPTION(bool, chams_player_flat, false);
@@ -97,19 +118,22 @@ public:
 		OPTION(bool, misc_hitmarker, false);
 		OPTION(bool, misc_lefthand_knife, false);
 		OPTION(bool, misc_bulletbeams, false);
-		OPTION(bool, misc_grenadepreview, true);
+		OPTION(bool, misc_grenadepreview, false);
 		OPTION(bool, misc_nightmode, true);
 		OPTION(float, misc_nightmode_slider, 1.f);	
 		OPTION(float, misc_nightmode_prop_r, 1.f);
 		OPTION(float, misc_nightmode_prop_g, 1.f);
 		OPTION(float, misc_nightmode_prop_b, 1.f);
 		OPTION(float, misc_nightmode_prop_alpha, 1.f);
-		OPTION(bool, misc_backtrack, true);
+		OPTION(bool, misc_backtrack, false);
 		OPTION(int, misc_backtrack_slider, 12);
 		OPTION(bool, misc_removezoom, false);
-		OPTION(bool, misc_bhop, true);
+		OPTION(bool, misc_bhop, false);
+		OPTION(int, misc_bhop_hitchance, 100);
+		OPTION(int, misc_bhop_maxfailed, 10);
+		OPTION(int, misc_bhop_max, 10);
 		OPTION(bool, misc_autoaccept, false);
-		OPTION(bool, misc_autostrafe, true);
+		OPTION(bool, misc_autostrafe, false);
 		OPTION(bool, misc_no_hands, false);
 		OPTION(bool, misc_thirdperson, false);
 		OPTION(bool, misc_showranks, true);

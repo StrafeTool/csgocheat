@@ -39,7 +39,7 @@ void Render::GetFonts() {
 	ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(
 		Fonts::Droid_compressed_data,
 		Fonts::Droid_compressed_size,
-		12.f);
+		13.f);
 	
 	// esp font
 	//g_pDefaultFont = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(

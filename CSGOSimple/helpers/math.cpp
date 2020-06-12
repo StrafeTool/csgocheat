@@ -201,5 +201,14 @@ namespace Math
             return 0.f;
         }
     }
+    float NormalizeYaw(float yaw)
+    {
+        if (yaw > 180)
+            yaw -= (round(yaw / 360) * 360.f);
+        else if (yaw < -180)
+            yaw += (round(yaw / 360) * -360.f);
+
+        return yaw;
+    }
 
 }

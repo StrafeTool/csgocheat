@@ -2,15 +2,9 @@
 #include "../Helpers/Math.hpp"
 #include "../Helpers/Utils.hpp"
 
-//increase it if valve added some funcs to baseentity :lillulmoa:
-constexpr auto VALVE_ADDED_FUNCS = 0ull;
-
 bool C_BaseEntity::IsPlayer()
 {
-	//index: 152
-	//ref: "effects/nightvision"
-	//sig: 8B 92 ? ? ? ? FF D2 84 C0 0F 45 F7 85 F6
-	return CallVFunction<bool(__thiscall*)(C_BaseEntity*)>(this, 157 + VALVE_ADDED_FUNCS)(this);
+	return CallVFunction<bool(__thiscall*)(C_BaseEntity*)>(this, 157)(this);
 }
 
 bool C_BaseEntity::IsLoot() {
@@ -21,17 +15,15 @@ bool C_BaseEntity::IsLoot() {
 		GetClientClass()->m_ClassID == ClassId_CDrone ||
 		GetClientClass()->m_ClassID == ClassId_CDronegun ||
 		GetClientClass()->m_ClassID == ClassId_CItem_Healthshot ||
-		GetClientClass()->m_ClassID == ClassId_CItemCash || 
+		GetClientClass()->m_ClassID == ClassId_CItemCash ||
 		GetClientClass()->m_ClassID == ClassId_CBumpMine;
 }
 
 bool C_BaseEntity::IsWeapon()
 {
-	//index: 160
-	//ref: "CNewParticleEffect::DrawModel"
-	//sig: 8B 80 ? ? ? ? FF D0 84 C0 74 6F 8B 4D A4
-	return CallVFunction<bool(__thiscall*)(C_BaseEntity*)>(this, 165 + VALVE_ADDED_FUNCS)(this);
+	return CallVFunction<bool(__thiscall*)(C_BaseEntity*)>(this, 165)(this);
 }
+
 
 bool C_BaseEntity::IsPlantedC4()
 {
@@ -41,36 +33,6 @@ bool C_BaseEntity::IsPlantedC4()
 bool C_BaseEntity::IsDefuseKit()
 {
 	return GetClientClass()->m_ClassID == ClassId_CBaseAnimating;
-}
-//
-//bool C_BaseEntity::IsNade()
-//{
-//	C_BaseCombatWeapon* pWeapon = (C_BaseCombatWeapon*)this->acti();
-//
-//	if (!pWeapon)
-//		return false;
-//
-//	std::string WeaponName = pWeapon->GetName();
-//
-//	if (WeaponName == "weapon_incgrenade")
-//		return true;
-//	else if (WeaponName == "weapon_decoy")
-//		return true;
-//	else if (WeaponName == "weapon_flashbang")
-//		return true;
-//	else if (WeaponName == "weapon_hegrenade")
-//		return true;
-//	else if (WeaponName == "weapon_smokegrenade")
-//		return true;
-//	else if (WeaponName == "weapon_molotov")
-//		return true;
-//
-//	return false;
-//}
-
-CCSWeaponInfo* C_BaseCombatWeapon::GetCSWeaponData()
-{
-	return g_WeaponSystem->GetWpnData(this->m_Item().m_iItemDefinitionIndex());
 }
 
 
@@ -129,35 +91,12 @@ bool C_BaseCombatWeapon::IsKnife()
 	if (this->m_Item().m_iItemDefinitionIndex() == WEAPON_TASER) return false;
 	return GetCSWeaponData()->iWeaponType == WEAPONTYPE_KNIFE;
 }
-bool C_BaseCombatWeapon::IsKnifeorNade()
+
+bool C_BaseCombatWeapon::IsAWPScout()
 {
-
-	C_BasePlayer* Player = g_LocalPlayer;
-	C_BaseCombatWeapon* pWeapon = (C_BaseCombatWeapon*)Player->m_hActiveWeapon();
-
-	if (!pWeapon)
-		return false;
-
-	std::string WeaponName = pWeapon->GetName();
-
-	if (WeaponName == "weapon_knife")
-		return true;
-	else if (WeaponName == "weapon_incgrenade")
-		return true;
-	else if (WeaponName == "weapon_decoy")
-		return true;
-	else if (WeaponName == "weapon_flashbang")
-		return true;
-	else if (WeaponName == "weapon_hegrenade")
-		return true;
-	else if (WeaponName == "weapon_smokegrenade")
-		return true;
-	else if (WeaponName == "weapon_molotov")
-		return true;
-
-	return false;
+	return (this->m_Item().m_iItemDefinitionIndex() == WEAPON_AWP ||
+		this->m_Item().m_iItemDefinitionIndex() == WEAPON_SSG08);
 }
-
 
 bool C_BaseCombatWeapon::IsRifle()
 {
@@ -204,23 +143,29 @@ bool C_BaseCombatWeapon::IsReloading()
 	return *(bool*)((uintptr_t)this + inReload);
 }
 
+CCSWeaponInfo* C_BaseCombatWeapon::GetCSWeaponData()
+{
+	return CallVFunction<CCSWeaponInfo* (__thiscall*)(void*)>(this, 460)(this);
+}
+
 float C_BaseCombatWeapon::GetInaccuracy()
 {
-	return CallVFunction<float(__thiscall*)(void*)>(this, 482 + VALVE_ADDED_FUNCS)(this);
+	return CallVFunction<float(__thiscall*)(void*)>(this, 482)(this);
 }
 
 float C_BaseCombatWeapon::GetSpread()
 {
-	return CallVFunction<float(__thiscall*)(void*)>(this, 452 + VALVE_ADDED_FUNCS)(this);
+	return CallVFunction<float(__thiscall*)(void*)>(this, 452)(this);
 }
 
 void C_BaseCombatWeapon::UpdateAccuracyPenalty()
 {
-	CallVFunction<void(__thiscall*)(void*)>(this, 483 + VALVE_ADDED_FUNCS)(this);
+	CallVFunction<void(__thiscall*)(void*)>(this, 483)(this);
 }
 
 CUtlVector<IRefCounted*>& C_BaseCombatWeapon::m_CustomMaterials()
-{	static auto inReload = *(uint32_t*)(Utils::PatternScan(GetModuleHandleW(L"client.dll"), "83 BE ? ? ? ? ? 7F 67") + 2) - 12;
+{
+	static auto inReload = *(uint32_t*)(Utils::PatternScan(GetModuleHandleW(L"client.dll"), "83 BE ? ? ? ? ? 7F 67") + 2) - 12;
 	return *(CUtlVector<IRefCounted*>*)((uintptr_t)this + inReload);
 }
 
@@ -235,24 +180,34 @@ CUserCmd*& C_BasePlayer::m_pCurrentCommand()
 	static auto currentCommand = *(uint32_t*)(Utils::PatternScan(GetModuleHandleW(L"client.dll"), "89 BE ? ? ? ? E8 ? ? ? ? 85 FF") + 2);
 	return *(CUserCmd**)((uintptr_t)this + currentCommand);
 }
-
+int& C_BasePlayer::get_take_damage() {
+	return *reinterpret_cast<int*>(uintptr_t(this) + 0x280);
+}
 int C_BasePlayer::GetNumAnimOverlays()
 {
 	return *(int*)((DWORD)this + 0x298C);
 }
-
-AnimationLayer *C_BasePlayer::GetAnimOverlays()
+float C_BasePlayer::m_flOldSimulationTime()
+{
+	return *reinterpret_cast<float*>(uintptr_t(this) + NetvarSys::Get().GetOffset("DT_BaseEntity", "m_flSimulationTime") + 0x4);
+}
+AnimationLayer* C_BasePlayer::GetAnimOverlays()
 {
 	return *(AnimationLayer**)((DWORD)this + 0x2980);
 }
 
-AnimationLayer *C_BasePlayer::GetAnimOverlay(int i)
+AnimationLayer* C_BasePlayer::GetAnimOverlay(int i)
 {
 	if (i < 15)
 		return &GetAnimOverlays()[i];
 	return nullptr;
 }
-
+void C_BasePlayer::SetAbsAngles(QAngle angle)
+{
+	using SetAbsAnglesFn = void(__thiscall*)(void*, const QAngle& Angles);
+	static SetAbsAnglesFn SetAbsAngles = (SetAbsAnglesFn)Utils::PatternScan(GetModuleHandleA("client.dll"), "55 8B EC 83 E4 F8 83 EC 64 53 56 57 8B F1 E8");
+	SetAbsAngles(this, angle);
+}
 int C_BasePlayer::GetSequenceActivity(int sequence)
 {
 	auto hdr = g_MdlInfo->GetStudiomodel(this->GetModel());
@@ -263,33 +218,54 @@ int C_BasePlayer::GetSequenceActivity(int sequence)
 	// sig for stuidohdr_t version: 53 56 8B F1 8B DA 85 F6 74 55
 	// sig for C_BaseAnimating version: 55 8B EC 83 7D 08 FF 56 8B F1 74 3D
 	// c_csplayer vfunc 242, follow calls to find the function.
-	// Thanks @Kron1Q for merge request
-	static auto get_sequence_activity = reinterpret_cast<int(__fastcall*)(void*, studiohdr_t*, int)>(Utils::PatternScan(GetModuleHandle("client.dll"), "55 8B EC 53 8B 5D 08 56 8B F1 83"));
+
+	static auto get_sequence_activity = reinterpret_cast<int(__fastcall*)(void*, studiohdr_t*, int)>(Utils::PatternScan(GetModuleHandle(L"client.dll"), "55 8B EC 53 8B 5D 08 56 8B F1 83"));
 
 	return get_sequence_activity(this, hdr, sequence);
 }
+float C_BasePlayer::MaxDesyncDelta() {
 
-CCSGOPlayerAnimState *C_BasePlayer::GetPlayerAnimState()
+	auto animstate = uintptr_t(this->GetPlayerAnimState());
+
+	float duckammount = *(float*)(animstate + 0xA4);
+	float speedfraction = std::fmax(0, std::fmin(*reinterpret_cast<float*>(animstate + 0xF8), 1));
+
+	float speedfactor = std::fmax(0, std::fmin(1, *reinterpret_cast<float*> (animstate + 0xFC)));
+
+	float unk1 = ((*reinterpret_cast<float*> (animstate + 0x11C) * -0.30000001) - 0.19999999) * speedfraction;
+	float unk2 = unk1 + 1.f;
+	float unk3;
+
+	if (duckammount > 0) {
+
+		unk2 += ((duckammount * speedfactor) * (0.5f - unk2));
+
+	}
+
+	unk3 = *(float*)(animstate + 0x334) * unk2;
+
+	return unk3;
+}
+CBasePlayerAnimState* C_BasePlayer::GetPlayerAnimState()
 {
-	return *(CCSGOPlayerAnimState**)((DWORD)this + 0x3914);
+	static auto m_bIsScoped = NetvarSys::Get().GetOffset("DT_CSPlayer", "m_bIsScoped");
+	return *(CBasePlayerAnimState**)((uintptr_t)this + m_bIsScoped - 0x14);//"DT_CSPlayer", "m_bIsScoped" - 0x14
 }
 
-void C_BasePlayer::UpdateAnimationState(CCSGOPlayerAnimState *state, QAngle angle)
+void C_BasePlayer::UpdateAnimationState(CBasePlayerAnimState* state, QAngle angle)
 {
+	if (!state)
+		return;
+
 	static auto UpdateAnimState = Utils::PatternScan(
-		GetModuleHandleA("client.dll"), "55 8B EC 83 E4 F8 83 EC 18 56 57 8B F9 F3 0F 11 54 24");
+		GetModuleHandleW(L"client.dll"), "55 8B EC 83 E4 F8 83 EC 18 56 57 8B F9 F3 0F 11 54 24");
 
 	if (!UpdateAnimState)
 		return;
 
 	__asm {
 		push 0
-	}
-
-	__asm
-	{
 		mov ecx, state
-
 		movss xmm1, dword ptr[angle + 4]
 		movss xmm2, dword ptr[angle]
 
@@ -297,26 +273,29 @@ void C_BasePlayer::UpdateAnimationState(CCSGOPlayerAnimState *state, QAngle angl
 	}
 }
 
-void C_BasePlayer::ResetAnimationState(CCSGOPlayerAnimState *state)
+void C_BasePlayer::ResetAnimationState(CBasePlayerAnimState* state)
 {
-	using ResetAnimState_t = void(__thiscall*)(CCSGOPlayerAnimState*);
-	static auto ResetAnimState = (ResetAnimState_t)Utils::PatternScan(GetModuleHandleA("client.dll"), "56 6A 01 68 ? ? ? ? 8B F1");
+	if (!state)
+		return;
+
+	using ResetAnimState_t = void(__thiscall*)(CBasePlayerAnimState*);
+	static auto ResetAnimState = (ResetAnimState_t)Utils::PatternScan(
+		GetModuleHandleW(L"client.dll"), "56 6A 01 68 ? ? ? ? 8B F1");
 	if (!ResetAnimState)
 		return;
 
 	ResetAnimState(state);
 }
 
-void C_BasePlayer::CreateAnimationState(CCSGOPlayerAnimState *state)
+void C_BasePlayer::CreateAnimationState(CBasePlayerAnimState* state)
 {
-	using CreateAnimState_t = void(__thiscall*)(CCSGOPlayerAnimState*, C_BasePlayer*);
+	using CreateAnimState_t = void(__thiscall*)(CBasePlayerAnimState*, C_BasePlayer*);
 	static auto CreateAnimState = (CreateAnimState_t)Utils::PatternScan(GetModuleHandleA("client.dll"), "55 8B EC 56 8B F1 B9 ? ? ? ? C7 46");
 	if (!CreateAnimState)
 		return;
 
 	CreateAnimState(state, this);
 }
-
 
 Vector C_BasePlayer::GetEyePos()
 {
@@ -332,7 +311,7 @@ player_info_t C_BasePlayer::GetPlayerInfo()
 
 bool C_BasePlayer::IsAlive()
 {
-	return m_lifeState() == LIFE_ALIVE;
+	return this->m_iHealth() > 0;
 }
 
 bool C_BasePlayer::IsFlashed()
@@ -373,53 +352,7 @@ Vector C_BasePlayer::GetHitboxPos(int hitbox_id)
 	}
 	return Vector{};
 }
-void C_BaseEntity::FixSetupBones(matrix3x4_t* Matrix) { // i took out alot of stuff from here because b1g secrets
-
-	static int m_fFlags = NetvarSys::Get().GetOffset("DT_BasePlayer", "m_fFlags");
-	static int m_nForceBone = NetvarSys::Get().GetOffset("DT_BaseAnimating", "m_nForceBone");
-
-
-	if (this == g_LocalPlayer)
-	{
-		const auto Backup = *(int*)(uintptr_t(this) + ptrdiff_t(0x272));
-
-		*(int*)(uintptr_t(this) + ptrdiff_t(0x272)) = -1;
-
-		this->SetupBones(Matrix, 126, 0x00000100 | 0x200, g_GlobalVars->curtime);
-
-		*(int*)(uintptr_t(this) + ptrdiff_t(0x272)) = Backup;
-	}
-	else
-	{
-		*reinterpret_cast<int*>(uintptr_t(this) + 0xA30) = g_GlobalVars->framecount;
-		*reinterpret_cast<int*>(uintptr_t(this) + 0xA28) = 0;
-
-		const auto Backup = *(int*)(uintptr_t(this) + ptrdiff_t(0x272));
-
-		*(int*)(uintptr_t(this) + ptrdiff_t(0x272)) = -1;
-
-		this->SetupBones(Matrix, 126, 0x00000100 | 0x200, g_GlobalVars->curtime);
-
-		*(int*)(uintptr_t(this) + ptrdiff_t(0x272)) = Backup;
-	}
-}
-
-mstudiobbox_t* C_BasePlayer::GetHitbox(int hitbox_id)
-{
-	matrix3x4_t boneMatrix[MAXSTUDIOBONES];
-
-	if (SetupBones(boneMatrix, MAXSTUDIOBONES, BONE_USED_BY_HITBOX, 0.0f)) {
-		auto studio_model = g_MdlInfo->GetStudiomodel(GetModel());
-		if (studio_model) {
-			auto hitbox = studio_model->GetHitboxSet(0)->GetHitbox(hitbox_id);
-			if (hitbox) {
-				return hitbox;
-			}
-		}
-	}
-	return nullptr;
-}
-Vector C_BasePlayer::GetHitboxPos2(int hitbox_id, matrix3x4_t* boneMatrix)
+Vector C_BasePlayer::GetHitboxPos(int hitbox_id, matrix3x4_t* boneMatrix)
 {
 	auto studio_model = g_MdlInfo->GetStudiomodel(GetModel());
 	if (studio_model) {
@@ -437,18 +370,55 @@ Vector C_BasePlayer::GetHitboxPos2(int hitbox_id, matrix3x4_t* boneMatrix)
 	}
 	return Vector{};
 }
+Vector C_BasePlayer::GetHitboxPos(int hitbox_id, matrix3x4_t* boneMatrix, float& Radius, Vector& Min, Vector& Max, int& Bone)
+{
+	auto studio_model = g_MdlInfo->GetStudiomodel(GetModel());
+	if (studio_model) {
+		auto hitbox = studio_model->GetHitboxSet(0)->GetHitbox(hitbox_id);
+		if (hitbox) {
+			auto
+				min = Vector{},
+				max = Vector{};
 
+			Math::VectorTransform(hitbox->bbmin, boneMatrix[hitbox->bone], min);
+			Math::VectorTransform(hitbox->bbmax, boneMatrix[hitbox->bone], max);
 
-bool C_BasePlayer::GetHitboxPos(int hitbox, Vector &output)
+			Radius = hitbox->m_flRadius;
+			Min = hitbox->bbmin;
+			Max = hitbox->bbmax;
+			Bone = hitbox->bone;
+
+			return (min + max) / 2.0f;
+		}
+	}
+	return Vector{};
+}
+mstudiobbox_t* C_BasePlayer::GetHitbox(int hitbox_id)
+{
+	matrix3x4_t boneMatrix[MAXSTUDIOBONES];
+
+	if (SetupBones(boneMatrix, MAXSTUDIOBONES, BONE_USED_BY_HITBOX, 0.0f)) {
+		auto studio_model = g_MdlInfo->GetStudiomodel(GetModel());
+		if (studio_model) {
+			auto hitbox = studio_model->GetHitboxSet(0)->GetHitbox(hitbox_id);
+			if (hitbox) {
+				return hitbox;
+			}
+		}
+	}
+	return nullptr;
+}
+
+bool C_BasePlayer::GetHitboxPos(int hitbox, Vector& output)
 {
 	if (hitbox >= HITBOX_MAX)
 		return false;
 
-	const model_t *model = this->GetModel();
+	const model_t* model = this->GetModel();
 	if (!model)
 		return false;
 
-	studiohdr_t *studioHdr = g_MdlInfo->GetStudiomodel(model);
+	studiohdr_t* studioHdr = g_MdlInfo->GetStudiomodel(model);
 	if (!studioHdr)
 		return false;
 
@@ -456,7 +426,7 @@ bool C_BasePlayer::GetHitboxPos(int hitbox, Vector &output)
 	if (!this->SetupBones(matrix, MAXSTUDIOBONES, 0x100, 0))
 		return false;
 
-	mstudiobbox_t *studioBox = studioHdr->GetHitboxSet(0)->GetHitbox(hitbox);
+	mstudiobbox_t* studioBox = studioHdr->GetHitboxSet(0)->GetHitbox(hitbox);
 	if (!studioBox)
 		return false;
 
@@ -479,6 +449,26 @@ Vector C_BasePlayer::GetBonePos(int bone)
 	return Vector{};
 }
 
+Vector C_BasePlayer::RotatedBonePos(int bone, float rotation)
+{
+	Vector bone_pos;
+	Vector origin;
+	Vector bone_offset;
+
+	bone_pos = GetHitboxPos(bone);
+	origin = m_vecOrigin();
+	bone_offset = bone_pos - origin;
+
+	float radius = bone_offset.Length2D();
+	float radian = rotation * 57.295779513082f;
+
+	bone_offset.x = cos(radian) * radius;
+	bone_offset.y = sin(radian) * radius;
+
+	bone_offset += origin;
+
+	return bone_offset;
+}
 bool C_BasePlayer::CanSeePlayer(C_BasePlayer* player, int hitbox)
 {
 	CGameTrace tr;
@@ -509,15 +499,12 @@ bool C_BasePlayer::CanSeePlayer(C_BasePlayer* player, const Vector& pos)
 
 void C_BasePlayer::UpdateClientSideAnimation()
 {
-	return CallVFunction<void(__thiscall*)(void*)>(this, 223 + VALVE_ADDED_FUNCS)(this);
+	return CallVFunction<void(__thiscall*)(void*)>(this, 223)(this);
 }
 
 void C_BasePlayer::InvalidateBoneCache()
 {
 	static DWORD addr = (DWORD)Utils::PatternScan(GetModuleHandleA("client.dll"), "80 3D ? ? ? ? ? 74 16 A1 ? ? ? ? 48 C7 81");
-
-	*(int*)((uintptr_t)this + 0xA30) = g_GlobalVars->framecount; //we'll skip occlusion checks now
-	*(int*)((uintptr_t)this + 0xA28) = 0;//clear occlusion flags
 
 	unsigned long g_iModelBoneCounter = **(unsigned long**)(addr + 10);
 	*(unsigned int*)((DWORD)this + 0x2924) = 0xFF7FFFFF; // m_flLastBoneSetupTime = -FLT_MAX;
@@ -542,7 +529,7 @@ void C_BaseAttributableItem::SetGloveModelIndex(int modelIndex)
 
 void C_BaseViewModel::SendViewModelMatchingSequence(int sequence)
 {
-	return CallVFunction<void(__thiscall*)(void*, int)>(this, 246 + VALVE_ADDED_FUNCS)(this, sequence);
+	return CallVFunction<void(__thiscall*)(void*, int)>(this, 244)(this, sequence);
 }
 
 float_t C_BasePlayer::m_flSpawnTime()

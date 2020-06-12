@@ -28,6 +28,8 @@ private:
     void OverrideMaterial(bool ignoreZ, bool flat, bool wireframe, bool glass, const Color& rgba);
 
     IMaterial* materialRegular = nullptr;
+    IMaterial* materialRegularIgnoreZ = nullptr;
     IMaterial* materialFlat = nullptr;
-    IMaterial* glowtest = nullptr;
+    IMaterial* materialFlatIgnoreZ = nullptr;
+    IMaterial* materialDogtag = nullptr;
 };
